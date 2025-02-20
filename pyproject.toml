@@ -7,7 +7,17 @@ authors = [
     { name = "Julian Hoever", email = "julianhoever@posteo.de" }
 ]
 requires-python = ">=3.13"
-dependencies = []
+dependencies = [
+    "ipykernel>=6.29.5",
+    "jupyterlab>=4.3.5",
+    "matplotlib>=3.10.0",
+    "pandas>=2.2.3",
+    "pillow>=11.1.0",
+    "requests>=2.32.3",
+    "torch>=2.6.0",
+    "torchvision>=0.21.0",
+    "torch-training",
+]
 
 [build-system]
 requires = ["hatchling"]
@@ -21,3 +31,10 @@ torch-training = { git = "https://github.com/julianhoever/torch-training", branc
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+
+[dependency-groups]
+dev = [
+    "mypy>=1.15.0",
+    "pytest>=8.3.4",
+    "ruff>=0.9.7",
+]
