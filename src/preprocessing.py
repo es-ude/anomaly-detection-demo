@@ -8,6 +8,6 @@ class ImagePreprocessing(Compose):
             [
                 ToImage(),
                 Resize((target_img_width, target_img_height)),
-                ToDtype(dtype=torch.uint8, scale=True),
+                ToDtype(dtype=torch.float32, scale=True),
             ]
         )
