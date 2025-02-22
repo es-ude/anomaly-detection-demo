@@ -3,6 +3,7 @@ from functools import partial
 from pathlib import Path
 
 import torch
+from torchsummary import summary
 
 from src.datasets.mvtec_ad import MVTecAD
 from src.model import Autoencoder
@@ -11,13 +12,14 @@ from src.preprocessing import ImagePreprocessing
 from src.reproducibility import get_commit_hash
 from src.training import train_autoencoder
 
-OUTPUT_DIR = Path(os.environ["OUTPUT_DIR"])
+SAVED_MODEL = Path(os.environ["SAVED_MODEL"])
+VERSION_FILE = Path(os.environ["VERSION_FILE"])
 
 
 def main() -> None:
-    OUTPUT_DIR.mkdir(exist_ok=True)
-
     model = Autoencoder()
+    summary(model, input_size=(3, 256, 256))
+
     ds_train, ds_test = _autoencoder_datasets()
 
     train_autoencoder(
@@ -50,14 +52,15 @@ def _autoencoder_datasets() -> tuple[MVTecAD, MVTecAD]:
 
 
 def _save_model(model: torch.nn.Module) -> None:
-    save_model(model, destination=OUTPUT_DIR / "model.pt")
+    SAVED_MODEL.parent.mkdir(exist_ok=True)
+    save_model(model, SAVED_MODEL)
 
 
 def _save_version() -> None:
     commit_hash = get_commit_hash()
     if commit_hash is not None:
-        version_file = OUTPUT_DIR / "commit_hash.txt"
-        version_file.write_text(commit_hash)
+        VERSION_FILE.parent.mkdir(exist_ok=True)
+        VERSION_FILE.write_text(commit_hash)
 
 
 if __name__ == "__main__":
