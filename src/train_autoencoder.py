@@ -1,8 +1,9 @@
 import os
-from functools import partial
 from pathlib import Path
+from typing import cast
 
 import torch
+from torch.utils.data import Dataset, random_split
 from torchsummary import summary
 
 from src.datasets.mvtec_ad import MVTecAD
@@ -27,7 +28,7 @@ def main() -> None:
         ds_train=ds_train,
         ds_test=ds_test,
         batch_size=32,
-        epochs=10,
+        epochs=20,
         learning_rate=1e-3,
         num_workers=0,
         device=torch.device(os.environ["DEVICE"]),
@@ -37,18 +38,18 @@ def main() -> None:
     _save_version()
 
 
-def _autoencoder_datasets() -> tuple[MVTecAD, MVTecAD]:
-    create_ds = partial(
-        MVTecAD,
+def _autoencoder_datasets() -> tuple[Dataset, Dataset]:
+    ds = MVTecAD(
         dataset_dir=Path(os.environ["AD_DATASET_DIR"]),
         object=os.environ["AD_OBJECT"],
+        training_set=True,
         anomalies=["good"],
         sample_transform=ImagePreprocessing(
             target_img_width=int(os.environ["IMAGE_WIDTH"]),
             target_img_height=int(os.environ["IMAGE_HEIGHT"]),
         ),
     )
-    return create_ds(training_set=True), create_ds(training_set=False)
+    return cast(tuple[Dataset, Dataset], random_split(ds, lengths=[0.8, 0.2]))
 
 
 def _save_model(model: torch.nn.Module) -> None:
