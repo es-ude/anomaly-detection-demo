@@ -2,6 +2,7 @@ import os
 from pathlib import Path
 from typing import cast
 
+import pandas as pd
 import torch
 from torch.utils.data import Dataset, random_split
 from torchsummary import summary
@@ -14,6 +15,7 @@ from src.reproducibility import get_commit_hash
 from src.training import train_autoencoder
 
 SAVED_MODEL = Path(os.environ["SAVED_MODEL"])
+HISTORY_FILE = Path(os.environ["HISTORY_FILE"])
 VERSION_FILE = Path(os.environ["VERSION_FILE"])
 
 
@@ -23,7 +25,7 @@ def main() -> None:
 
     ds_train, ds_test = _autoencoder_datasets()
 
-    train_autoencoder(
+    history = train_autoencoder(
         model=model,
         ds_train=ds_train,
         ds_test=ds_test,
@@ -35,6 +37,7 @@ def main() -> None:
     )
 
     _save_model(model)
+    _save_history(history)
     _save_version()
 
 
@@ -55,6 +58,11 @@ def _autoencoder_datasets() -> tuple[Dataset, Dataset]:
 def _save_model(model: torch.nn.Module) -> None:
     SAVED_MODEL.parent.mkdir(exist_ok=True)
     save_model(model, SAVED_MODEL)
+
+
+def _save_history(history: dict[str, list[float]]) -> None:
+    df_history = pd.DataFrame.from_dict(history)
+    df_history.to_csv(HISTORY_FILE, index=False)
 
 
 def _save_version() -> None:
