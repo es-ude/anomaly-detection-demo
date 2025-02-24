@@ -9,14 +9,14 @@ class Encoder(torch.nn.Sequential):
             *_conv_block(in_channels=128, out_channels=256),  # 32
             *_conv_block(in_channels=256, out_channels=512),  # 16
             *_conv_block(in_channels=512, out_channels=1024),  # 8
-            *_conv_block(in_channels=1024, out_channels=2048),  # 4
+            *_conv_block(in_channels=1024, out_channels=4096),  # 4
         )
 
 
 class Decoder(torch.nn.Sequential):
     def __init__(self) -> None:
         super().__init__(
-            *_deconv_block(in_channels=2048, out_channels=1024, up_size=8),
+            *_deconv_block(in_channels=4096, out_channels=1024, up_size=8),
             *_deconv_block(in_channels=1024, out_channels=512, up_size=16),
             *_deconv_block(in_channels=512, out_channels=256, up_size=32),
             *_deconv_block(in_channels=256, out_channels=128, up_size=64),
