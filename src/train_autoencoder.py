@@ -21,7 +21,7 @@ VERSION_FILE = Path(os.environ["VERSION_FILE"])
 
 def main() -> None:
     model = Autoencoder()
-    summary(model, input_size=(3, 256, 256))
+    summary(model, input_size=(3, 256, 256), device="cpu")
 
     ds_train, ds_test = _autoencoder_datasets()
 
