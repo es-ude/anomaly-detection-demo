@@ -4,26 +4,26 @@ import torch
 class Encoder(torch.nn.Sequential):
     def __init__(self) -> None:
         super().__init__(
-            *_conv_block(in_channels=3, out_channels=64),  # 127
-            *_conv_block(in_channels=64, out_channels=64),  # 63
-            *_conv_block(in_channels=64, out_channels=128),  # 31
-            *_conv_block(in_channels=128, out_channels=128),  # 15
-            *_conv_block(in_channels=128, out_channels=256),  # 7
-            *_conv_block(in_channels=256, out_channels=256),  # 3
-            *_conv_block(in_channels=256, out_channels=32768),  # 1
+            *_conv_block(in_channels=3, out_channels=32),  # 128
+            *_conv_block(in_channels=32, out_channels=64),  # 64
+            *_conv_block(in_channels=64, out_channels=128),  # 32
+            *_conv_block(in_channels=128, out_channels=256),  # 16
+            *_conv_block(in_channels=256, out_channels=512),  # 8
+            *_conv_block(in_channels=512, out_channels=1024),  # 4
         )
 
 
 class Decoder(torch.nn.Sequential):
     def __init__(self) -> None:
         super().__init__(
-            *_deconv_block(in_channels=32768, out_channels=256, opad=0),
-            *_deconv_block(in_channels=256, out_channels=256, opad=0),
-            *_deconv_block(in_channels=256, out_channels=128, opad=0),
-            *_deconv_block(in_channels=128, out_channels=128, opad=0),
-            *_deconv_block(in_channels=128, out_channels=64, opad=0),
-            *_deconv_block(in_channels=64, out_channels=64, opad=0),
-            *_deconv_block(in_channels=64, out_channels=3, opad=1, final_layer=True),
+            *_deconv_block(in_channels=1024, out_channels=512, up_size=8),
+            *_deconv_block(in_channels=512, out_channels=256, up_size=16),
+            *_deconv_block(in_channels=256, out_channels=128, up_size=32),
+            *_deconv_block(in_channels=128, out_channels=64, up_size=64),
+            *_deconv_block(in_channels=64, out_channels=32, up_size=128),
+            *_deconv_block(
+                in_channels=32, out_channels=3, up_size=256, final_layer=True
+            ),
         )
 
 
@@ -39,13 +39,20 @@ class Autoencoder(torch.nn.Module):
         return decoded
 
 
-def _conv_block(in_channels: int, out_channels: int) -> list[torch.nn.Module]:
+def _conv_block(
+    in_channels: int,
+    out_channels: int,
+    kernel_size: int = 3,
+    stride: int = 1,
+    pool_size: int = 2,
+) -> list[torch.nn.Module]:
     return [
         torch.nn.Conv2d(
             in_channels=in_channels,
             out_channels=in_channels,
-            kernel_size=3,
-            stride=2,
+            kernel_size=kernel_size,
+            stride=stride,
+            padding="same",
             groups=in_channels,
         ),
         torch.nn.Conv2d(
@@ -55,28 +62,37 @@ def _conv_block(in_channels: int, out_channels: int) -> list[torch.nn.Module]:
             stride=1,
             groups=1,
         ),
+        torch.nn.MaxPool2d(
+            kernel_size=pool_size,
+        ),
         torch.nn.ReLU(),
     ]
 
 
 def _deconv_block(
-    in_channels: int, out_channels: int, opad: int, final_layer: bool = False
+    in_channels: int,
+    out_channels: int,
+    up_size: int,
+    kernel_size: int = 3,
+    stride: int = 1,
+    final_layer: bool = False,
 ) -> list[torch.nn.Module]:
     return [
+        torch.nn.Upsample(size=(up_size, up_size), mode="bilinear"),
+        torch.nn.Conv2d(
+            in_channels=in_channels,
+            out_channels=in_channels,
+            kernel_size=kernel_size,
+            stride=stride,
+            padding="same",
+            groups=in_channels,
+        ),
         torch.nn.Conv2d(
             in_channels=in_channels,
             out_channels=out_channels,
             kernel_size=1,
             stride=1,
             groups=1,
-        ),
-        torch.nn.ConvTranspose2d(
-            in_channels=out_channels,
-            out_channels=out_channels,
-            kernel_size=3,
-            stride=2,
-            output_padding=opad,
-            groups=out_channels,
         ),
         torch.nn.Sigmoid() if final_layer else torch.nn.ReLU(),
     ]
