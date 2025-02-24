@@ -14,7 +14,7 @@ def train_autoencoder(
     num_workers: int = 0,
     device: torch.device = torch.device("cpu"),
 ) -> dict[str, list[float]]:
-    history = dict(train_reconst_mse=[], test_reconst_mse=[])
+    history = dict(epoch=[], train_reconst_mse=[], test_reconst_mse=[])
 
     data_loader = partial(DataLoader, batch_size=batch_size, num_workers=num_workers)
     dl_train = data_loader(ds_train, shuffle=True)
@@ -29,6 +29,8 @@ def train_autoencoder(
     model.to(device)
 
     for epoch in range(1, epochs + 1):
+        history["epoch"].append(epoch)
+
         model.train()
         running_loss = 0.0
 
@@ -59,7 +61,7 @@ def train_autoencoder(
         history["test_reconst_mse"].append(running_loss)
 
         print(
-            f"[{epoch}/{epochs}] "
+            f"[{history['epoch'][-1]}/{epochs}] "
             f"train_reconst_mse: {history['train_reconst_mse'][-1]:.04f} ; "
             f"test_reconst_mse: {history['test_reconst_mse'][-1]:.04f}"
         )
