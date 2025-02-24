@@ -30,7 +30,7 @@ def main() -> None:
         ds_train=ds_train,
         ds_test=ds_test,
         batch_size=32,
-        epochs=20,
+        epochs=100,
         learning_rate=1e-3,
         num_workers=0,
         device=torch.device(os.environ["DEVICE"]),
