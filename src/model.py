@@ -62,10 +62,11 @@ def _conv_block(
             stride=1,
             groups=1,
         ),
+        torch.nn.ReLU(),
+        torch.nn.BatchNorm2d(num_features=out_channels),
         torch.nn.MaxPool2d(
             kernel_size=pool_size,
         ),
-        torch.nn.ReLU(),
     ]
 
 
@@ -77,6 +78,14 @@ def _deconv_block(
     stride: int = 1,
     final_layer: bool = False,
 ) -> list[torch.nn.Module]:
+    if final_layer:
+        block_tail = [torch.nn.Sigmoid()]
+    else:
+        block_tail = [
+            torch.nn.BatchNorm2d(num_features=out_channels),
+            torch.nn.ReLU(),
+        ]
+
     return [
         torch.nn.Upsample(size=(up_size, up_size), mode="bilinear"),
         torch.nn.Conv2d(
@@ -94,5 +103,5 @@ def _deconv_block(
             stride=1,
             groups=1,
         ),
-        torch.nn.Sigmoid() if final_layer else torch.nn.ReLU(),
+        *block_tail,
     ]
