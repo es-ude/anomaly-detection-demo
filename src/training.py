@@ -33,7 +33,7 @@ def train_autoencoder(
         running_loss = 0.0
 
         for input, _ in dl_train:
-            input.to(device)
+            input = input.to(device)
             model.zero_grad()
 
             reconstructed = model(input)
