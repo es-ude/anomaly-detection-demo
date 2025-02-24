@@ -50,6 +50,7 @@ def _autoencoder_datasets() -> tuple[Dataset, Dataset]:
         sample_transform=ImagePreprocessing(
             target_img_width=int(os.environ["IMAGE_WIDTH"]),
             target_img_height=int(os.environ["IMAGE_HEIGHT"]),
+            augment_images=True,
         ),
     )
     return cast(tuple[Dataset, Dataset], random_split(ds, lengths=[0.8, 0.2]))
