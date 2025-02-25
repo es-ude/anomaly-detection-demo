@@ -10,18 +10,17 @@ from torchsummary import summary
 from src.datasets.mvtec_ad import MVTecAD
 from src.model import Autoencoder
 from src.persistence import save_model
-from src.preprocessing import ImagePreprocessing
+from src.preprocessing import TrainingPreprocessing
 from src.reproducibility import get_commit_hash
 from src.training import train_autoencoder
 
-SAVED_MODEL = Path(os.environ["SAVED_MODEL"])
-HISTORY_FILE = Path(os.environ["HISTORY_FILE"])
-VERSION_FILE = Path(os.environ["VERSION_FILE"])
+IMAGE_WIDTH = int(os.environ["IMAGE_WIDTH"])
+IMAGE_HEIGHT = int(os.environ["IMAGE_HEIGHT"])
 
 
 def main() -> None:
     model = Autoencoder()
-    summary(model, input_size=(3, 256, 256), device="cpu")
+    summary(model, input_size=(3, IMAGE_WIDTH, IMAGE_HEIGHT), device="cpu")
 
     ds_train, ds_test = _autoencoder_datasets()
 
@@ -30,7 +29,7 @@ def main() -> None:
         ds_train=ds_train,
         ds_test=ds_test,
         batch_size=32,
-        epochs=300,
+        epochs=500,
         learning_rate=1e-3,
         num_workers=16,
         device=torch.device(os.environ["DEVICE"]),
@@ -47,30 +46,29 @@ def _autoencoder_datasets() -> tuple[Dataset, Dataset]:
         object=os.environ["AD_OBJECT"],
         training_set=True,
         anomalies=["good"],
-        sample_transform=ImagePreprocessing(
-            target_img_width=int(os.environ["IMAGE_WIDTH"]),
-            target_img_height=int(os.environ["IMAGE_HEIGHT"]),
-            augment_images=True,
-        ),
+        sample_transform=TrainingPreprocessing(IMAGE_WIDTH, IMAGE_HEIGHT),
     )
     return cast(tuple[Dataset, Dataset], random_split(ds, lengths=[0.8, 0.2]))
 
 
 def _save_model(model: torch.nn.Module) -> None:
-    SAVED_MODEL.parent.mkdir(exist_ok=True)
-    save_model(model, SAVED_MODEL)
+    saved_model = Path(os.environ["SAVED_MODEL"])
+    saved_model.parent.mkdir(exist_ok=True)
+    save_model(model, saved_model)
 
 
 def _save_history(history: dict[str, list[float]]) -> None:
+    history_file = Path(os.environ["HISTORY_FILE"])
     df_history = pd.DataFrame.from_dict(history)
-    df_history.to_csv(HISTORY_FILE, index=False)
+    df_history.to_csv(history_file, index=False)
 
 
 def _save_version() -> None:
+    version_file = Path(os.environ["VERSION_FILE"])
     commit_hash = get_commit_hash()
     if commit_hash is not None:
-        VERSION_FILE.parent.mkdir(exist_ok=True)
-        VERSION_FILE.write_text(commit_hash)
+        version_file.parent.mkdir(exist_ok=True)
+        version_file.write_text(commit_hash)
 
 
 if __name__ == "__main__":

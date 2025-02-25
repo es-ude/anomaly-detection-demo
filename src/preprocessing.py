@@ -6,24 +6,17 @@ from torchvision.transforms.v2 import (
     Resize,
     ToDtype,
     ToImage,
+    Transform,
 )
 
 
-class ImagePreprocessing(Compose):
+class _BasePreprocessing(Compose):
     def __init__(
         self,
         target_img_width: int,
         target_img_height: int,
-        augment_images: bool = False,
+        augmentations: list[Transform],
     ) -> None:
-        if augment_images:
-            augmentations = [
-                RandomHorizontalFlip(),
-                RandomVerticalFlip(),
-            ]
-        else:
-            augmentations = []
-
         super().__init__(
             [
                 ToImage(),
@@ -32,3 +25,24 @@ class ImagePreprocessing(Compose):
                 ToDtype(dtype=torch.float32, scale=True),
             ]
         )
+
+
+class TrainingPreprocessing(_BasePreprocessing):
+    def __init__(
+        self,
+        target_img_width: int,
+        target_img_height: int,
+    ) -> None:
+        super().__init__(
+            target_img_width,
+            target_img_height,
+            [
+                RandomHorizontalFlip(),
+                RandomVerticalFlip(),
+            ],
+        )
+
+
+class InferencePreprocessing(_BasePreprocessing):
+    def __init__(self, target_img_width: int, target_img_height: int) -> None:
+        super().__init__(target_img_width, target_img_height, [])

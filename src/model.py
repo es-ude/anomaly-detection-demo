@@ -4,23 +4,17 @@ import torch
 class Encoder(torch.nn.Sequential):
     def __init__(self) -> None:
         super().__init__(
-            *_conv_block(in_channels=3, out_channels=64),  # 128
-            *_conv_block(in_channels=64, out_channels=128),  # 64
-            *_conv_block(in_channels=128, out_channels=256),  # 32
-            *_conv_block(in_channels=256, out_channels=512),  # 16
-            *_conv_block(in_channels=512, out_channels=1024),  # 8
-            *_conv_block(in_channels=1024, out_channels=4096),  # 4
+            *_conv_block(in_channels=3, out_channels=64, pool_size=4),  # 64
+            *_conv_block(in_channels=64, out_channels=32),  # 32
+            *_conv_block(in_channels=32, out_channels=1),  # 16
         )
 
 
 class Decoder(torch.nn.Sequential):
     def __init__(self) -> None:
         super().__init__(
-            *_deconv_block(in_channels=4096, out_channels=1024, up_size=8),
-            *_deconv_block(in_channels=1024, out_channels=512, up_size=16),
-            *_deconv_block(in_channels=512, out_channels=256, up_size=32),
-            *_deconv_block(in_channels=256, out_channels=128, up_size=64),
-            *_deconv_block(in_channels=128, out_channels=64, up_size=128),
+            *_deconv_block(in_channels=1, out_channels=32, up_size=32),
+            *_deconv_block(in_channels=32, out_channels=64, up_size=64),
             *_deconv_block(
                 in_channels=64, out_channels=3, up_size=256, final_layer=True
             ),
@@ -64,9 +58,7 @@ def _conv_block(
         ),
         torch.nn.ReLU(),
         torch.nn.BatchNorm2d(num_features=out_channels),
-        torch.nn.MaxPool2d(
-            kernel_size=pool_size,
-        ),
+        torch.nn.MaxPool2d(kernel_size=pool_size),
     ]
 
 
@@ -87,7 +79,7 @@ def _deconv_block(
         ]
 
     return [
-        torch.nn.Upsample(size=(up_size, up_size), mode="bilinear"),
+        torch.nn.UpsamplingBilinear2d((up_size, up_size)),
         torch.nn.Conv2d(
             in_channels=in_channels,
             out_channels=in_channels,
