@@ -16,3 +16,9 @@ AD_OBJECT=hazelnut
 IMAGE_WIDTH=48
 IMAGE_HEIGHT=48
 ```
+
+To start the training:
+
+```bash
+uv run --env-file=.env src/train_autoencoder.py
+```
