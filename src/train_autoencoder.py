@@ -31,7 +31,7 @@ def main() -> None:
         batch_size=32,
         epochs=500,
         learning_rate=1e-3,
-        num_workers=16,
+        num_workers=int(os.environ["NUM_WORKERS"]),
         device=torch.device(os.environ["DEVICE"]),
     )
 
