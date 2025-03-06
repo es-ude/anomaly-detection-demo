@@ -4,7 +4,7 @@ import torch
 class Encoder(torch.nn.Sequential):
     def __init__(self) -> None:
         super().__init__(
-            *_conv_block(in_channels=3, out_channels=64, pool_size=4),  # 64
+            *_conv_block(in_channels=1, out_channels=64),  # 64
             *_conv_block(in_channels=64, out_channels=32),  # 32
             *_conv_block(in_channels=32, out_channels=1),  # 16
         )
@@ -16,7 +16,7 @@ class Decoder(torch.nn.Sequential):
             *_deconv_block(in_channels=1, out_channels=32, up_size=32),
             *_deconv_block(in_channels=32, out_channels=64, up_size=64),
             *_deconv_block(
-                in_channels=64, out_channels=3, up_size=256, final_layer=True
+                in_channels=64, out_channels=1, up_size=128, final_layer=True
             ),
         )
 

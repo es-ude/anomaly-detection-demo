@@ -1,6 +1,7 @@
 import torch
 from torchvision.transforms.v2 import (
     Compose,
+    Grayscale,
     RandomHorizontalFlip,
     RandomVerticalFlip,
     Resize,
@@ -20,6 +21,7 @@ class _BasePreprocessing(Compose):
         super().__init__(
             [
                 ToImage(),
+                Grayscale(num_output_channels=1),
                 Resize((target_img_width, target_img_height)),
                 *augmentations,
                 ToDtype(dtype=torch.float32, scale=True),
