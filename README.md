@@ -13,8 +13,8 @@ NUM_WORKERS=0
 AD_DATASET_DIR=<path_to_dataset>
 AD_OBJECT=hazelnut
 
-IMAGE_WIDTH=48
-IMAGE_HEIGHT=48
+IMAGE_WIDTH=256
+IMAGE_HEIGHT=256
 ```
 
 To start the training:
