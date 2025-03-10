@@ -30,7 +30,7 @@ def train_autoencoder(
     num_samples_train = len(dl_train)
     num_samples_test = len(dl_test)
 
-    loss_fn = torch.nn.MSELoss()
+    loss_fn = torch.nn.L1Loss()
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 
     model.to(device)
