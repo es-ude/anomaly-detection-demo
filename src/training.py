@@ -3,8 +3,6 @@ from functools import partial
 import torch
 from torch.utils.data import DataLoader, Dataset
 
-from src.datasets.in_memory_dataset import load_in_memory_dataset
-
 
 def train_autoencoder(
     model: torch.nn.Module,
@@ -14,14 +12,9 @@ def train_autoencoder(
     epochs: int,
     learning_rate: float,
     num_workers: int = 0,
-    in_memory_dataset: bool = True,
     device: torch.device = torch.device("cpu"),
 ) -> dict[str, list[float]]:
     history = dict(epoch=[], train_reconst_mse=[], test_reconst_mse=[])
-
-    if in_memory_dataset:
-        ds_train = load_in_memory_dataset(ds_train)
-        ds_test = load_in_memory_dataset(ds_test)
 
     data_loader = partial(DataLoader, batch_size=batch_size, num_workers=num_workers)
     dl_train = data_loader(ds_train, shuffle=True)

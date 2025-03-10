@@ -32,7 +32,6 @@ def main() -> None:
         epochs=500,
         learning_rate=1e-3,
         num_workers=int(os.environ["NUM_WORKERS"]),
-        in_memory_dataset=True,
         device=torch.device(os.environ["DEVICE"]),
     )
 
@@ -48,6 +47,7 @@ def _autoencoder_datasets() -> tuple[Dataset, Dataset]:
         training_set=True,
         anomalies=["good"],
         sample_transform=TrainingPreprocessing(IMAGE_WIDTH, IMAGE_HEIGHT),
+        in_memory=True,
     )
     return cast(tuple[Dataset, Dataset], random_split(ds, lengths=[0.8, 0.2]))
 

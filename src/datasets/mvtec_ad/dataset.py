@@ -5,6 +5,7 @@ import torch
 from PIL import Image as PilImage
 from torch.utils.data import Dataset
 from torchvision.transforms.v2 import Compose, ToImage
+from torchvision.transforms.v2.functional import pil_to_tensor
 from torchvision.tv_tensors import Image
 
 from .constants import CLASSES
@@ -19,6 +20,7 @@ class MVTecAD(Dataset):
         anomalies: Optional[list[str]] = None,
         sample_transform: Optional[Callable[[Image], torch.Tensor]] = None,
         target_transform: Optional[Callable[[torch.Tensor], torch.Tensor]] = None,
+        in_memory: bool = True,
     ) -> None:
         super().__init__()
 
@@ -28,18 +30,23 @@ class MVTecAD(Dataset):
         self.anomalies = CLASSES[self.object] if anomalies is None else anomalies
         self.sample_transform = Compose([ToImage(), sample_transform])
         self.target_transform = target_transform
+        self.in_memory = in_memory
 
         self._dataset_len = self._determine_dataset_len()
         self._image_label_pairs = self._determine_image_label_pairs()
+
+        if self.in_memory:
+            self._loaded_samples, self._loaded_targets = self._load_dataset()
 
     def __len__(self) -> int:
         return self._dataset_len
 
     def __getitem__(self, index: int) -> tuple[torch.Tensor, torch.Tensor]:
-        image_file, label = self._image_label_pairs[index]
-
-        with PilImage.open(image_file, "r") as opened_image:
-            image = opened_image.copy()
+        if self.in_memory:
+            image, label = self._loaded_samples[index], self._loaded_targets[index]
+        else:
+            image_file, label = self._image_label_pairs[index]
+            image = _load_image(image_file)
 
         if self.sample_transform is not None:
             image = self.sample_transform(image)
@@ -55,8 +62,11 @@ class MVTecAD(Dataset):
         )
 
     def _determine_image_label_pairs(self) -> list[tuple[Path, torch.Tensor]]:
+        def label(obj_name: str, anomaly: str) -> torch.Tensor:
+            return torch.tensor(CLASSES[obj_name].index(anomaly))
+
         return [
-            (img, torch.tensor(CLASSES[self.object].index(cls_dir.name)))
+            (img, label(self.object, cls_dir.name))
             for cls_dir in self._get_anomaly_class_dirs()
             for img in _get_images(cls_dir)
         ]
@@ -66,6 +76,20 @@ class MVTecAD(Dataset):
         object_split_dir = self.dataset_dir / self.object / split_name
         return [object_split_dir / anomaly for anomaly in self.anomalies]
 
+    def _load_dataset(self) -> tuple[torch.Tensor, torch.Tensor]:
+        images, labels = [], []
+        for image_file, label in self._image_label_pairs:
+            image = _load_image(image_file)
+            images.append(image)
+            labels.append(label)
+        return torch.stack(images), torch.stack(labels)
+
 
 def _get_images(dir: Path) -> list[Path]:
     return list(img for img in dir.glob("*.png") if img.is_file())
+
+
+def _load_image(image_file: Path) -> torch.Tensor:
+    with PilImage.open(image_file, "r") as opened_image:
+        image = pil_to_tensor(opened_image.copy())
+    return image
