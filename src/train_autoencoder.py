@@ -32,7 +32,7 @@ def main() -> None:
         batch_size=32,
         epochs=500,
         learning_rate=1e-3,
-        augment_input_image=RandomErasing(p=0.5, scale=(0.2, 0.2), value=0),
+        augment_input_image=RandomErasing(p=0.5, scale=(0.25, 0.25), value=0),
         num_workers=int(os.environ["NUM_WORKERS"]),
         device=torch.device(os.environ["DEVICE"]),
     )
