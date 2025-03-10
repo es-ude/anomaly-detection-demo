@@ -32,6 +32,7 @@ def main() -> None:
         epochs=500,
         learning_rate=1e-3,
         num_workers=int(os.environ["NUM_WORKERS"]),
+        in_memory_dataset=True,
         device=torch.device(os.environ["DEVICE"]),
     )
 
