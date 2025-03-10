@@ -1,3 +1,4 @@
+from collections.abc import Callable
 from functools import partial
 
 import torch
@@ -11,6 +12,7 @@ def train_autoencoder(
     batch_size: int,
     epochs: int,
     learning_rate: float,
+    augment_input_image: Callable[[torch.Tensor], torch.Tensor] = lambda x: x,
     num_workers: int = 0,
     device: torch.device = torch.device("cpu"),
 ) -> dict[str, list[float]]:
@@ -34,16 +36,17 @@ def train_autoencoder(
         model.train()
         running_loss = 0.0
 
-        for input, _ in dl_train:
-            input = input.to(device)
+        for original_input, _ in dl_train:
+            augmented_input = augment_input_image(original_input).to(device)
+            original_input = original_input.to(device)
 
             model.zero_grad()
-            reconstructed = model(input)
-            loss = loss_fn(reconstructed, input)
+            reconstructed = model(augmented_input)
+            loss = loss_fn(reconstructed, original_input)
             loss.backward()
             optimizer.step()
 
-            running_loss += loss.item() * (len(input) / num_samples_train)
+            running_loss += loss.item() * (len(original_input) / num_samples_train)
 
         history["train_reconst_mse"].append(running_loss)
 

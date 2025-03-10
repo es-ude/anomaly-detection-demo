@@ -6,6 +6,7 @@ import pandas as pd
 import torch
 from torch.utils.data import Dataset, random_split
 from torchsummary import summary
+from torchvision.transforms.v2 import RandomErasing
 
 from src.datasets.mvtec_ad import MVTecAD
 from src.model import Autoencoder
@@ -31,6 +32,7 @@ def main() -> None:
         batch_size=32,
         epochs=500,
         learning_rate=1e-3,
+        augment_input_image=RandomErasing(p=0.5, scale=(0.2, 0.2), value=0),
         num_workers=int(os.environ["NUM_WORKERS"]),
         device=torch.device(os.environ["DEVICE"]),
     )
