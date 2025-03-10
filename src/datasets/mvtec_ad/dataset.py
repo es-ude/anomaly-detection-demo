@@ -2,13 +2,12 @@ from pathlib import Path
 from typing import Callable, Optional
 
 import torch
-from PIL import Image
+from PIL import Image as PilImage
 from torch.utils.data import Dataset
+from torchvision.transforms.v2 import Compose, ToImage
+from torchvision.tv_tensors import Image
 
 from .constants import CLASSES
-
-SampleType = Image.Image | torch.Tensor
-LabelType = int | torch.Tensor
 
 
 class MVTecAD(Dataset):
@@ -18,8 +17,8 @@ class MVTecAD(Dataset):
         object: str,
         training_set: bool,
         anomalies: Optional[list[str]] = None,
-        sample_transform: Optional[Callable[[Image.Image], SampleType]] = None,
-        target_transform: Optional[Callable[[int], LabelType]] = None,
+        sample_transform: Optional[Callable[[Image], torch.Tensor]] = None,
+        target_transform: Optional[Callable[[torch.Tensor], torch.Tensor]] = None,
     ) -> None:
         super().__init__()
 
@@ -27,8 +26,8 @@ class MVTecAD(Dataset):
         self.object = object
         self.training_set = training_set
         self.anomalies = CLASSES[self.object] if anomalies is None else anomalies
-        self.sample_transfrom = sample_transform
-        self.target_transfrom = target_transform
+        self.sample_transform = Compose([ToImage(), sample_transform])
+        self.target_transform = target_transform
 
         self._dataset_len = self._determine_dataset_len()
         self._image_label_pairs = self._determine_image_label_pairs()
@@ -36,17 +35,17 @@ class MVTecAD(Dataset):
     def __len__(self) -> int:
         return self._dataset_len
 
-    def __getitem__(self, index: int) -> tuple[SampleType, LabelType]:
+    def __getitem__(self, index: int) -> tuple[torch.Tensor, torch.Tensor]:
         image_file, label = self._image_label_pairs[index]
 
-        with Image.open(image_file, "r") as opened_image:
+        with PilImage.open(image_file, "r") as opened_image:
             image = opened_image.copy()
 
-        if self.sample_transfrom is not None:
-            image = self.sample_transfrom(image)
+        if self.sample_transform is not None:
+            image = self.sample_transform(image)
 
-        if self.target_transfrom is not None:
-            label = self.target_transfrom(label)
+        if self.target_transform is not None:
+            label = self.target_transform(label)
 
         return image, label
 
@@ -55,9 +54,9 @@ class MVTecAD(Dataset):
             len(_get_images(cls_dir)) for cls_dir in self._get_anomaly_class_dirs()
         )
 
-    def _determine_image_label_pairs(self) -> list[tuple[Path, int]]:
+    def _determine_image_label_pairs(self) -> list[tuple[Path, torch.Tensor]]:
         return [
-            (img, CLASSES[self.object].index(cls_dir.name))
+            (img, torch.tensor(CLASSES[self.object].index(cls_dir.name)))
             for cls_dir in self._get_anomaly_class_dirs()
             for img in _get_images(cls_dir)
         ]

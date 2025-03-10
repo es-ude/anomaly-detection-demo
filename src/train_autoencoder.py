@@ -20,7 +20,7 @@ IMAGE_HEIGHT = int(os.environ["IMAGE_HEIGHT"])
 
 def main() -> None:
     model = Autoencoder()
-    summary(model, input_size=(3, IMAGE_WIDTH, IMAGE_HEIGHT), device="cpu")
+    summary(model, input_size=(1, IMAGE_WIDTH, IMAGE_HEIGHT), device="cpu")
 
     ds_train, ds_test = _autoencoder_datasets()
 
