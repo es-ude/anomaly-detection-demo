@@ -2,11 +2,11 @@ from pathlib import Path
 from typing import Callable, Optional
 
 import torch
-from PIL import Image as PilImage
 from torch.utils.data import Dataset
 from torchvision.transforms.v2 import Compose, ToImage
-from torchvision.transforms.v2.functional import pil_to_tensor
 from torchvision.tv_tensors import Image
+
+from src.datasets.image_utils import get_image_paths, load_image
 
 from .constants import CLASSES
 
@@ -46,7 +46,7 @@ class MVTecAD(Dataset):
             image, label = self._loaded_samples[index], self._loaded_targets[index]
         else:
             image_file, label = self._image_label_pairs[index]
-            image = _load_image(image_file)
+            image = load_image(image_file)
 
         if self.sample_transform is not None:
             image = self.sample_transform(image)
@@ -58,7 +58,8 @@ class MVTecAD(Dataset):
 
     def _determine_dataset_len(self) -> int:
         return sum(
-            len(_get_images(cls_dir)) for cls_dir in self._get_anomaly_class_dirs()
+            len(get_image_paths(cls_dir, "png"))
+            for cls_dir in self._get_anomaly_class_dirs()
         )
 
     def _determine_image_label_pairs(self) -> list[tuple[Path, torch.Tensor]]:
@@ -68,7 +69,7 @@ class MVTecAD(Dataset):
         return [
             (img, label(self.object, cls_dir.name))
             for cls_dir in self._get_anomaly_class_dirs()
-            for img in _get_images(cls_dir)
+            for img in get_image_paths(cls_dir, "png")
         ]
 
     def _get_anomaly_class_dirs(self) -> list[Path]:
@@ -79,17 +80,7 @@ class MVTecAD(Dataset):
     def _load_dataset(self) -> tuple[torch.Tensor, torch.Tensor]:
         images, labels = [], []
         for image_file, label in self._image_label_pairs:
-            image = _load_image(image_file)
+            image = load_image(image_file)
             images.append(image)
             labels.append(label)
         return torch.stack(images), torch.stack(labels)
-
-
-def _get_images(dir: Path) -> list[Path]:
-    return list(img for img in dir.glob("*.png") if img.is_file())
-
-
-def _load_image(image_file: Path) -> torch.Tensor:
-    with PilImage.open(image_file, "r") as opened_image:
-        image = pil_to_tensor(opened_image.copy())
-    return image
