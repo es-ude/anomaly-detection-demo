@@ -45,8 +45,8 @@ def main() -> None:
 
 def _autoencoder_datasets() -> tuple[Dataset, Dataset]:
     ds = MVTecAD(
-        dataset_dir=Path(os.environ["AD_DATASET_DIR"]),
-        object=os.environ["AD_OBJECT"],
+        dataset_dir=Path(os.environ["MVTEC_DATASET_DIR"]),
+        object=os.environ["MVTEC_OBJECT"],
         training_set=True,
         anomalies=["good"],
         sample_transform=TrainingPreprocessing(IMAGE_WIDTH, IMAGE_HEIGHT),
