@@ -12,6 +12,7 @@ def train_autoencoder(
     batch_size: int,
     epochs: int,
     learning_rate: float,
+    weight_decay: float = 0,
     augment_input_image: Callable[[torch.Tensor], torch.Tensor] = lambda x: x,
     num_workers: int = 0,
     device: torch.device = torch.device("cpu"),
@@ -26,7 +27,9 @@ def train_autoencoder(
     num_samples_test = len(dl_test)
 
     loss_fn = torch.nn.L1Loss()
-    optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
+    optimizer = torch.optim.Adam(
+        model.parameters(), lr=learning_rate, weight_decay=weight_decay
+    )
 
     model.to(device)
 
