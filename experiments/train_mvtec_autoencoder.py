@@ -34,10 +34,10 @@ def main() -> None:
         ds_train=ds_train,
         ds_test=ds_test,
         batch_size=32,
-        epochs=500,
+        epochs=7000,
         learning_rate=1e-3,
         weight_decay=0,
-        augment_input_image=RandomErasing(p=0.5, scale=(0.25, 0.25), value=0),
+        augment_input_image=RandomErasing(p=1, scale=(0.25, 0.25), value="random"),
         num_workers=int(os.environ["NUM_WORKERS"]),
         device=torch.device(os.environ["DEVICE"]),
     )
