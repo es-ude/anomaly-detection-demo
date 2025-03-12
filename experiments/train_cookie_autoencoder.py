@@ -18,6 +18,10 @@ from src.model import Autoencoder
 from src.preprocessing import TrainingPreprocessing
 from src.training import train_autoencoder
 
+SAVED_MODEL_FILE = Path(os.environ["COOKIE_SAVED_MODEL"])
+HISTORY_FILE = Path(os.environ["COOKIE_HISTORY_FILE"])
+VERSION_FILE = Path(os.environ["COOKIE_VERSION_FILE"])
+
 
 def main() -> None:
     model = Autoencoder()
@@ -38,9 +42,9 @@ def main() -> None:
         device=torch.device(os.environ["DEVICE"]),
     )
 
-    save_model(model)
-    save_history(history)
-    save_version()
+    save_model(model, SAVED_MODEL_FILE)
+    save_history(history, HISTORY_FILE)
+    save_version(VERSION_FILE)
 
 
 def _autoencoder_datasets() -> list[Dataset]:

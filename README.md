@@ -1,23 +1,35 @@
 # Anomaly Detection Demo
 
+## Datasets
+
+The MVTec AD dataset can be downloaded [[here]](https://www.mvtec.com/company/research/datasets/mvtec-ad).
+
+## Environment
+
 Example environment file (`.env`) to set all required environment variables:
 
 ```bash
-SAVED_MODEL=<path-to-output-directory>/model.pt
-HISTORY_FILE=<path-to-output-directory>/history.csv
-VERSION_FILE=<path-to-output-directory>/commit_hash.txt
-
-DEVICE=<e.g. cuda or mps>
+DEVICE=<e.g. cuda, mps or cpu>
 NUM_WORKERS=0
 
 IMAGE_WIDTH=128
 IMAGE_HEIGHT=128
 
-MVTEC_DATASET_DIR=<path-to-mvtec-ad-dataset>
+MVTEC_DATASET_DIR=<path to mvtec dataset>
 MVTEC_OBJECT=hazelnut
 
-COOKIE_DATASET_DIR=<path-to-cookie-dataset>
+MVTEC_SAVED_MODEL=<path to mvtec outputs>/model.pt
+MVTEC_HISTORY_FILE=<path to mvtec outputs>/history.csv
+MVTEC_VERSION_FILE=outputs/mvtec<path to mvtec outputs>/commit_hash.txt
+
+COOKIE_DATASET_DIR=<path to cookie dataset>
+
+COOKIE_SAVED_MODEL=<path to cookie outputs>/model.pt
+COOKIE_HISTORY_FILE=<path to cookie outputs>/history.csv
+COOKIE_VERSION_FILE=<path to cookie outputs>/commit_hash.txt
 ```
+
+## Run Experiments
 
 To start the training:
 
