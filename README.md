@@ -22,5 +22,5 @@ COOKIE_DATASET_DIR=<path-to-cookie-dataset>
 To start the training:
 
 ```bash
-uv run --env-file=.env src/train_autoencoder.py
+uv run --env-file=.env experiments/train_mvtec_autoencoder.py
 ```

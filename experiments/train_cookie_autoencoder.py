@@ -1,0 +1,57 @@
+import os
+from pathlib import Path
+
+import torch
+from torch.utils.data import Dataset, random_split
+from torchsummary import summary
+from torchvision.transforms.v2 import RandomErasing
+
+from experiments.definitions import (
+    IMAGE_HEIGHT,
+    IMAGE_WIDTH,
+    save_history,
+    save_model,
+    save_version,
+)
+from src.datasets.cookie_ad import CookieAD
+from src.model import Autoencoder
+from src.preprocessing import TrainingPreprocessing
+from src.training import train_autoencoder
+
+
+def main() -> None:
+    model = Autoencoder()
+    summary(model, input_size=(1, IMAGE_WIDTH, IMAGE_HEIGHT), device="cpu")
+
+    ds_train, ds_test = _autoencoder_datasets()
+
+    history = train_autoencoder(
+        model=model,
+        ds_train=ds_train,
+        ds_test=ds_test,
+        batch_size=32,
+        epochs=500,
+        learning_rate=1e-3,
+        weight_decay=0,
+        augment_input_image=RandomErasing(p=0.5, scale=(0.25, 0.25), value=0),
+        num_workers=int(os.environ["NUM_WORKERS"]),
+        device=torch.device(os.environ["DEVICE"]),
+    )
+
+    save_model(model)
+    save_history(history)
+    save_version()
+
+
+def _autoencoder_datasets() -> list[Dataset]:
+    ds = CookieAD(
+        dataset_dir=Path(os.environ["COOKIE_DATASET_DIR"]),
+        training_set=True,
+        sample_transform=TrainingPreprocessing(IMAGE_WIDTH, IMAGE_HEIGHT),
+        in_memory=True,
+    )
+    return random_split(ds, lengths=[0.8, 0.2])
+
+
+if __name__ == "__main__":
+    main()
