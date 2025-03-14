@@ -6,14 +6,15 @@ from nicegui.events import ValueChangeEventArguments
 
 from camera import Camera
 from api import setup_api
-from image_processing import CookieCalibrator, ImageBaseProcessor
+from image_processing import CookieCalibrator, ImageBaseProcessor, ImageAnomalyDetector
 
 zakid_logo = Path(__file__).parent / "assets" / "logo_zakid.png"
 ude_logo = Path(__file__).parent / "assets" / "logo_ude.png"
 placeholder_image = Path(__file__).parent / "assets" / "placeholder.png"
 
 camera_instance = Camera()
-image_processor = ImageBaseProcessor()
+image_processor = ImageAnomalyDetector()
+# image_processor = ImageBaseProcessor()
 # image_processor = CookieCalibrator()
 
 

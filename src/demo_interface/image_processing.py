@@ -1,6 +1,10 @@
 import cv2
 import numpy as np
 
+from pathlib import Path
+
+from src.anomaly_detector import AnomalyDetector
+
 
 class ImageBaseProcessor:
     def __init__(self, cropped_frame_length: int = 800):
@@ -16,7 +20,7 @@ class ImageBaseProcessor:
         y_min = center[1] - half_cropped_frame_length
         y_max = center[1] + half_cropped_frame_length
 
-        cropped_frame = frame[y_min:y_max + 1, x_min:x_max + 1]
+        cropped_frame = frame[y_min:y_max, x_min:x_max]
 
         return cropped_frame
 
@@ -65,17 +69,25 @@ class CookieCalibrator(ImageBaseProcessor):
         return processed_frame
 
 
-class AnomalyDetector(ImageBaseProcessor):
+class ImageAnomalyDetector(ImageBaseProcessor):
 
     def __init__(self):
         super().__init__()
+        self.anomaly_detector = AnomalyDetector(
+            saved_model=Path("/Users/florianhettstedt/projects/anomaly-detection-demo/model_checkpoints/cookie/model.pt"),
+            input_img_size=(800, 800),
+            inference_img_size=(128, 128)
+        )
+        self.anomaly_detector.load_model()
 
     def _detect_cookie(self, frame: np.ndarray) -> bool:
         # placeholder for classificator model
         return True
 
     def _detect_anomaly(self, frame: np.ndarray) -> np.ndarray:
-        return frame
+        return self.anomaly_detector.detect(frame)
 
     def _process_frame(self, frame: np.ndarray) -> np.ndarray:
-        return frame
+        frame = np.array(frame, dtype=np.uint8)
+        processed_frame = self._detect_anomaly(frame)
+        return processed_frame
