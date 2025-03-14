@@ -2,7 +2,9 @@ import numpy as np
 from matplotlib.colors import LinearSegmentedColormap
 
 
-def hot_cmap(use_alpha: bool = False) -> LinearSegmentedColormap:
+def hot_cmap(
+    use_alpha: bool = False, quantization_levels: int = 256
+) -> LinearSegmentedColormap:
     colors = ["black", "red", "orange", "yellow", "white"]
     fractions = [0.0, 0.2, 0.6, 0.8, 1.0]
 
@@ -13,4 +15,6 @@ def hot_cmap(use_alpha: bool = False) -> LinearSegmentedColormap:
 
     anchor_points = list(zip(fractions, zip(colors, alphas)))
 
-    return LinearSegmentedColormap.from_list("alpha_hot", anchor_points, N=512)
+    return LinearSegmentedColormap.from_list(
+        "alpha_hot", anchor_points, N=quantization_levels
+    )
