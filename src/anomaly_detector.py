@@ -1,0 +1,72 @@
+from pathlib import Path
+
+import cv2
+import numpy as np
+import numpy.typing as npt
+import torch
+import torchvision.transforms.v2.functional as tv_func
+
+from src.model import Autoencoder
+from src.persistence import load_model
+from src.preprocessing import InferencePreprocessing
+
+
+class AnomalyDetector:
+    def __init__(
+        self,
+        saved_model: Path,
+        input_img_size: tuple[int, int],
+        inference_img_size: tuple[int, int],
+    ) -> None:
+        self._saved_model = saved_model
+        self._input_img_size = list(input_img_size)
+        self._model = None
+        self._preprocessing = InferencePreprocessing(*inference_img_size)
+
+    def load_model(self) -> None:
+        self._model = Autoencoder()
+        load_model(self._model, self._saved_model)
+        self._model.eval()
+
+    def detect(self, image: npt.NDArray[np.uint8]) -> npt.NDArray[np.uint8]:
+        if self._model is None:
+            self.load_model()
+
+        preprocessed_image = self._preprocessing(image)
+        reconstructed_image = self._perform_inference(preprocessed_image)
+        residuals = _compute_residuals(preprocessed_image, reconstructed_image)
+        resized_residuals = self._resize_residuals(residuals)
+        anomaly_map = _create_anomaly_map(image, _image_to_numpy(resized_residuals))
+
+        return anomaly_map
+
+    def _perform_inference(self, image: torch.Tensor) -> torch.Tensor:
+        with torch.no_grad():
+            result = self._model(image)
+        return result
+
+    def _resize_residuals(self, residuals: torch.Tensor) -> torch.Tensor:
+        return tv_func.resize(
+            residuals,
+            size=self._input_img_size,
+            interpolation=tv_func.InterpolationMode.BILINEAR,
+        )
+
+
+def _compute_residuals(
+    original_image: torch.Tensor, reconstructed_image: torch.Tensor
+) -> torch.Tensor:
+    return (original_image - reconstructed_image).abs()
+
+
+def _image_to_numpy(image: torch.Tensor) -> npt.NDArray[np.uint8]:
+    return np.array(image.movedim(0, -1) * 255, dtype=np.uint8)
+
+
+def _create_anomaly_map(
+    image: npt.NDArray[np.uint8], residuals: npt.NDArray[np.uint8]
+) -> npt.NDArray[np.uint8]:
+    residuals = cv2.applyColorMap(residuals, cv2.COLORMAP_HOT)
+    residuals = cv2.cvtColor(residuals, cv2.COLOR_BGR2RGB)
+    combined = cv2.addWeighted(image, 0.4, residuals, 0.6, 0)
+    return cv2.cvtColor(combined, cv2.COLOR_RGBA2RGB)
