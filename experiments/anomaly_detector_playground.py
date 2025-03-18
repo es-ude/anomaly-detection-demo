@@ -4,14 +4,16 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
 import numpy.typing as npt
+import torch
 from PIL import Image
 from torchvision.transforms.functional import crop
 
-from src.anomaly_detector import AnomalyDetector
+from src.anomaly_detector import AnomalyDetector, DetectionResult
 
 IMAGE_PATH = Path(os.environ["COOKIE_DATASET_DIR"]) / "test" / "bad"
 SAVED_MODEL = Path(os.environ["COOKIE_SAVED_MODEL"])
 INFERENCE_IMG_SIZE = int(os.environ["IMAGE_WIDTH"]), int(os.environ["IMAGE_HEIGHT"])
+DEVICE = torch.device(os.environ["DEVICE"])
 _AREA_TO_CROP = (180, 490, 900, 900)
 
 
@@ -22,13 +24,14 @@ def main() -> None:
         saved_model=SAVED_MODEL,
         input_img_size=(900, 900),
         inference_img_size=INFERENCE_IMG_SIZE,
+        device=DEVICE,
     )
     anomaly_detector.load_model()
 
     image = _load_image(all_images[0])
-    anomaly_image = anomaly_detector.detect(image)
+    result = anomaly_detector.detect(image)
 
-    _plot(anomaly_image)
+    _plot(result)
 
 
 def _load_image(path: Path) -> npt.NDArray[np.uint8]:
@@ -37,10 +40,18 @@ def _load_image(path: Path) -> npt.NDArray[np.uint8]:
         return np.array(img, dtype=np.uint8)
 
 
-def _plot(image: npt.NDArray[np.uint8]) -> None:
-    fig = plt.figure(frameon=False)
-    plt.axis("off")
-    plt.imshow(image)
+def _plot(result: DetectionResult) -> None:
+    fig, axs = plt.subplots(nrows=1, ncols=5, tight_layout=True, figsize=(15, 3))
+    axs[0].imshow(result.original)
+    axs[0].set_title("Original")
+    axs[1].imshow(result.preprocessed)
+    axs[1].set_title("Preprocessed")
+    axs[2].imshow(result.reconstructed)
+    axs[2].set_title("Reconstructed")
+    axs[3].imshow(result.residuals)
+    axs[3].set_title("Residuals")
+    axs[4].imshow(result.superimposed)
+    axs[4].set_title("Superimposed")
     plt.show()
 
 
