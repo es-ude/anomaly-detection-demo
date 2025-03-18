@@ -90,4 +90,5 @@ class ImageAnomalyDetector(ImageBaseProcessor):
     def _process_frame(self, frame: np.ndarray) -> np.ndarray:
         frame = np.array(frame, dtype=np.uint8)
         processed_frame = self._detect_anomaly(frame)
+        processed_frame = cv2.cvtColor(processed_frame, cv2.COLOR_RGB2BGR)
         return processed_frame

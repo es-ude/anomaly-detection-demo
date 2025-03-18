@@ -2,7 +2,6 @@ import time
 
 from nicegui import ui, app
 from pathlib import Path
-from nicegui.events import ValueChangeEventArguments
 
 from camera import Camera
 from api import setup_api

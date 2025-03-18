@@ -13,6 +13,8 @@ class Camera:
 
 	def read_frame(self) -> np.ndarray | None:
 		ret, frame = self.capture.read()
+		if ret:
+			frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 		return frame if ret else None
 
 	def release(self) -> None:
