@@ -1,9 +1,17 @@
 import signal
+import base64
+import time
+
+import numpy as np
+import cv2
 
 from fastapi import Response
+from starlette.responses import JSONResponse
 from nicegui import Client, app, core, ui, run
 from pathlib import Path
+from dataclasses import asdict
 
+from src.anomaly_detector import DetectionResult
 from src.demo_interface.camera import Camera
 from src.demo_interface.image_processing import ImageBaseProcessor
 
@@ -12,23 +20,39 @@ def _load_image_as_bytes(image_path: Path) -> bytes:
     with open(image_path, "rb") as file:
         return file.read()
 
+def _convert_image_to_bytes(frame: np.ndarray) -> bytes | None:
+    ret, buffer = cv2.imencode('.jpg', frame)
+    if not ret:
+        return None
+    return buffer.tobytes()
+
+def _convert_bytes_to_base64(data: bytes) -> str:
+    return base64.b64encode(data).decode('utf-8')
 
 def setup_api(camera:  Camera, image_processor: ImageBaseProcessor, placeholder_image: Path):
-    placeholder = Response(content=_load_image_as_bytes(placeholder_image), media_type='image/png')
+    placeholder_bytes = _load_image_as_bytes(placeholder_image)
+    placeholder_json_response = JSONResponse({"result": _convert_bytes_to_base64(placeholder_bytes),})
 
     @app.get('/video/frame')
     async def grab_video_frame() -> Response:
         if not camera.is_opened():
-            return placeholder
+            return placeholder_json_response
 
         frame = await run.io_bound(camera.read_frame)
         if frame is None:
-            return placeholder
+            return placeholder_json_response
 
-        jpeg = await run.cpu_bound(image_processor.process_frame, frame)
-        if jpeg is None:
-            return placeholder
-        return Response(content=jpeg, media_type='image/jpeg')
+        image_result = await run.cpu_bound(image_processor.process_frame, frame)
+
+        if image_result is None:
+            return JSONResponse({"result": _convert_bytes_to_base64(_load_image_as_bytes(placeholder_image)),})
+
+        image_result = {
+            key: _convert_bytes_to_base64(img_bytes) \
+            if img_bytes is not None else _convert_bytes_to_base64(placeholder_bytes) \
+            for key, img_bytes in asdict(image_result).items()
+        }
+        return JSONResponse(image_result)
 
     async def disconnect() -> None:
         for client_id in Client.instances:

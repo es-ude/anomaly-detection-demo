@@ -50,7 +50,7 @@ def _plot(result: DetectionResult) -> None:
     axs[2].set_title("Reconstructed")
     axs[3].imshow(result.residuals)
     axs[3].set_title("Residuals")
-    axs[4].imshow(result.superimposed)
+    axs[4].imshow(result.result)
     axs[4].set_title("Superimposed")
     plt.show()
 

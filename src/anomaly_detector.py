@@ -18,7 +18,7 @@ class DetectionResult:
     preprocessed: npt.NDArray[np.uint8]
     reconstructed: npt.NDArray[np.uint8]
     residuals: npt.NDArray[np.uint8]
-    superimposed: npt.NDArray[np.uint8]
+    result: npt.NDArray[np.uint8]
 
 
 class AnomalyDetector:
@@ -49,13 +49,12 @@ class AnomalyDetector:
         reconstructed_image = self._perform_inference(preprocessed_image)
         residuals = _compute_residuals(preprocessed_image, reconstructed_image)
         resized_residuals = self._resize_residuals(residuals)
-
         return DetectionResult(
             original=image,
             preprocessed=_to_rgb(_to_numpy(preprocessed_image)),
             reconstructed=_to_rgb(_to_numpy(reconstructed_image)),
             residuals=_apply_colormap(_to_numpy(residuals)),
-            superimposed=_superimpose(image, _to_numpy(resized_residuals)),
+            result=_superimpose(image, _to_numpy(resized_residuals)),
         )
 
     def _perform_inference(self, image: torch.Tensor) -> torch.Tensor:

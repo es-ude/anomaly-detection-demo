@@ -2,8 +2,18 @@ import cv2
 import numpy as np
 
 from pathlib import Path
+from dataclasses import asdict, dataclass, fields
 
-from src.anomaly_detector import AnomalyDetector
+from src.anomaly_detector import AnomalyDetector, DetectionResult
+
+
+@dataclass
+class ProcessedImagesResult:
+    result: bytes | None
+    original: bytes | None = None
+    preprocessed: bytes | None = None
+    reconstructed: bytes | None = None
+    residuals: bytes | None = None
 
 
 class ImageBaseProcessor:
@@ -31,7 +41,8 @@ class ImageBaseProcessor:
             return None
         return buffer.tobytes()
 
-    def _process_frame(self, frame: np.ndarray) -> np.ndarray:
+    def _process_frame(self, frame: np.ndarray) -> ProcessedImagesResult:
+        frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
         center = (frame.shape[1] // 2, frame.shape[0] // 2)
         processed_frame = cv2.circle(
             frame.copy(),
@@ -40,16 +51,18 @@ class ImageBaseProcessor:
             color=(255, 0, 0),
             thickness=5
         )
-        return processed_frame
+        return ProcessedImagesResult(
+            result=self._convert_image_to_bytes(processed_frame),
+        )
 
-    def process_frame(self, frame: np.ndarray) -> bytes | None:
+    def process_frame(self, frame: np.ndarray) -> ProcessedImagesResult:
         if frame is None:
             return None
 
         cropped_frame = self._crop_quadratic__centered_frame(frame)
-        processed_frame = self._process_frame(cropped_frame)
+        processed_images_result = self._process_frame(cropped_frame)
 
-        return self._convert_image_to_bytes(processed_frame)
+        return processed_images_result
 
 
 class CookieCalibrator(ImageBaseProcessor):
@@ -57,7 +70,8 @@ class CookieCalibrator(ImageBaseProcessor):
     def __init__(self):
         super().__init__()
 
-    def _process_frame(self, frame: np.ndarray) -> np.ndarray:
+    def _process_frame(self, frame: np.ndarray) -> ProcessedImagesResult:
+        frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
         center = (frame.shape[1] // 2, frame.shape[0] // 2)
         processed_frame = cv2.circle(
             frame.copy(),
@@ -66,7 +80,9 @@ class CookieCalibrator(ImageBaseProcessor):
             color=(0, 0, 255),
             thickness=5
         )
-        return processed_frame
+        return ProcessedImagesResult(
+            result=self._convert_image_to_bytes(processed_frame),
+        )
 
 
 class ImageAnomalyDetector(ImageBaseProcessor):
@@ -76,19 +92,25 @@ class ImageAnomalyDetector(ImageBaseProcessor):
         self.anomaly_detector = AnomalyDetector(
             saved_model=Path("/Users/florianhettstedt/projects/anomaly-detection-demo/model_checkpoints/cookie/model.pt"),
             input_img_size=(800, 800),
-            inference_img_size=(128, 128)
+            inference_img_size=(128, 128),
         )
         self.anomaly_detector.load_model()
 
-    def _detect_cookie(self, frame: np.ndarray) -> bool:
-        # placeholder for classificator model
-        return True
-
-    def _detect_anomaly(self, frame: np.ndarray) -> np.ndarray:
+    def _detect_anomaly(self, frame: np.ndarray) -> DetectionResult:
         return self.anomaly_detector.detect(frame)
 
-    def _process_frame(self, frame: np.ndarray) -> np.ndarray:
+
+    def _process_frame(self, frame: np.ndarray) -> ProcessedImagesResult:
         frame = np.array(frame, dtype=np.uint8)
-        processed_frame = self._detect_anomaly(frame)
-        processed_frame = cv2.cvtColor(processed_frame, cv2.COLOR_RGB2BGR)
-        return processed_frame
+        detection_result = self._detect_anomaly(frame)
+        detection_result = asdict(detection_result)
+
+        for key in detection_result.keys():
+            img = detection_result[key]
+            img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
+            img_bytes = self._convert_image_to_bytes(img)
+            detection_result[key] = img_bytes
+
+        processed_images_result = ProcessedImagesResult(**detection_result)
+        # processed_frame = cv2.cvtColor(processed_frame, cv2.COLOR_RGB2BGR)
+        return processed_images_result
