@@ -2,6 +2,10 @@ import os
 from pathlib import Path
 
 import torch
+from src.datasets.mvtec_ad import MVTecAD
+from src.model import Autoencoder
+from src.preprocessing import TrainingPreprocessing
+from src.training import train_autoencoder
 from torch.utils.data import Dataset, random_split
 from torchsummary import summary
 from torchvision.transforms.v2 import RandomErasing
@@ -13,10 +17,6 @@ from experiments.definitions import (
     save_model,
     save_version,
 )
-from src.datasets.mvtec_ad import MVTecAD
-from src.model import Autoencoder
-from src.preprocessing import TrainingPreprocessing
-from src.training import train_autoencoder
 
 SAVED_MODEL_FILE = Path(os.environ["MVTEC_SAVED_MODEL"])
 HISTORY_FILE = Path(os.environ["MVTEC_HISTORY_FILE"])

@@ -6,9 +6,8 @@ import numpy as np
 import numpy.typing as npt
 import torch
 from PIL import Image
-from torchvision.transforms.functional import crop
-
 from src.anomaly_detector import AnomalyDetector, DetectionResult
+from torchvision.transforms.functional import crop
 
 IMAGE_PATH = Path(os.environ["COOKIE_DATASET_DIR"]) / "test" / "bad"
 SAVED_MODEL = Path(os.environ["COOKIE_SAVED_MODEL"])

@@ -3,7 +3,6 @@ from pathlib import Path
 
 import pandas as pd
 import torch
-
 from src.persistence import save_model as save_model_to_disk
 from src.reproducibility import get_commit_hash
 
