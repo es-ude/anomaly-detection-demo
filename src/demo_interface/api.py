@@ -17,6 +17,19 @@ from src.demo_interface.image_processing import ImageBaseProcessor
 from src.demo_interface.utils import load_image_as_bytes, convert_bytes_to_base64
 
 
+def _to_json_response(processed, placeholder_bytes) -> JSONResponse:
+    if processed is None:
+        return JSONResponse({"result": convert_bytes_to_base64(placeholder_bytes)})
+
+    data_dict = {
+        key: convert_bytes_to_base64(img_bytes) \
+            if img_bytes is not None else convert_bytes_to_base64(placeholder_bytes) \
+        for key, img_bytes in asdict(processed).items()
+    }
+
+    return JSONResponse(data_dict)
+
+
 def setup_api(camera:  Camera, image_processor: ImageBaseProcessor, placeholder_image: Path):
     placeholder_bytes = load_image_as_bytes(placeholder_image)
     placeholder_json_response = JSONResponse({"result": convert_bytes_to_base64(placeholder_bytes),})
@@ -32,15 +45,40 @@ def setup_api(camera:  Camera, image_processor: ImageBaseProcessor, placeholder_
 
         image_result = await run.cpu_bound(image_processor.process_frame, frame)
 
-        if image_result is None:
-            return JSONResponse({"result": convert_bytes_to_base64(load_image_as_bytes(placeholder_image)),})
+        return _to_json_response(image_result, placeholder_bytes)
 
-        image_result = {
-            key: convert_bytes_to_base64(img_bytes) \
-            if img_bytes is not None else convert_bytes_to_base64(placeholder_bytes) \
-            for key, img_bytes in asdict(image_result).items()
-        }
-        return JSONResponse(image_result)
+    @app.get('/video/frame/calibration')
+    async def grab_base_frame() -> Response:
+        """
+        Uses the Calibration Processor.
+        """
+        if not camera.is_opened():
+            return placeholder_json_response
+
+        frame = await run.cpu_bound(camera.read_frame)
+
+        if frame is None:
+            return placeholder_json_response
+
+        processed = await run.cpu_bound(image_processor.process_frame, frame)
+        return _to_json_response(processed, placeholder_bytes)
+
+
+    @app.get('/video/frame/anomaly-detection')
+    async def grab_base_frame() -> Response:
+        """
+        Uses the Anomaly Detection Processor.
+        """
+        if not camera.is_opened():
+            return placeholder_json_response
+
+        frame = await run.cpu_bound(camera.read_frame)
+
+        if frame is None:
+            return placeholder_json_response
+
+        processed = await run.cpu_bound(image_processor.process_frame, frame)
+        return _to_json_response(processed, placeholder_bytes)
 
     async def disconnect() -> None:
         for client_id in Client.instances:
