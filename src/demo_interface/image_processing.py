@@ -21,7 +21,7 @@ class ImageBaseProcessor:
     def __init__(self, cropped_frame_length: int = 800):
         self.cropped_frame_length = cropped_frame_length
 
-    def _crop_quadratic__centered_frame(self, frame: np.ndarray) -> np.ndarray:
+    def _crop_center_square(self, frame: np.ndarray) -> np.ndarray:
         height, width, _ = frame.shape
         center = (width // 2, height // 2)
         half_cropped_frame_length = self.cropped_frame_length // 2
@@ -53,7 +53,7 @@ class ImageBaseProcessor:
         if frame is None:
             return None
 
-        cropped_frame = self._crop_quadratic__centered_frame(frame)
+        cropped_frame = self._crop_center_square(frame)
         processed_images_result = self._process_frame(cropped_frame)
 
         return processed_images_result
