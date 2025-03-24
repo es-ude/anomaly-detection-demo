@@ -13,7 +13,7 @@ class _BasePreprocessing(transforms.Compose):
             [
                 transforms.ToImage(),
                 transforms.Grayscale(num_output_channels=1),
-                transforms.functional.equalize,
+                transforms.functional.autocontrast,
                 transforms.Resize((target_img_width, target_img_height)),
                 *augmentations,
                 transforms.ToDtype(dtype=torch.float32, scale=True),
