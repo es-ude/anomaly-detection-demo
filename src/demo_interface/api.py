@@ -1,9 +1,4 @@
 import signal
-import base64
-import time
-
-import numpy as np
-import cv2
 
 from fastapi import Response
 from starlette.responses import JSONResponse
@@ -11,9 +6,8 @@ from nicegui import Client, app, core, ui, run
 from pathlib import Path
 from dataclasses import asdict
 
-from src.anomaly_detector import DetectionResult
 from src.demo_interface.camera import Camera
-from src.demo_interface.image_processing import ImageBaseProcessor
+from src.demo_interface.image_processing import BaseProcessor, CalibrationProcessor, AnomalyDetectorProcessor
 from src.demo_interface.utils import load_image_as_bytes, convert_bytes_to_base64
 
 
@@ -30,22 +24,15 @@ def _to_json_response(processed, placeholder_bytes) -> JSONResponse:
     return JSONResponse(data_dict)
 
 
-def setup_api(camera:  Camera, image_processor: ImageBaseProcessor, placeholder_image: Path):
+def setup_api(
+        camera:  Camera,
+        base_processor: BaseProcessor,
+        calibration_processor: CalibrationProcessor,
+        anomaly_detector_processor: AnomalyDetectorProcessor,
+        placeholder_image: Path)\
+        :
     placeholder_bytes = load_image_as_bytes(placeholder_image)
     placeholder_json_response = JSONResponse({"result": convert_bytes_to_base64(placeholder_bytes),})
-
-    @app.get('/video/frame')
-    async def grab_video_frame() -> Response:
-        if not camera.is_opened():
-            return placeholder_json_response
-
-        frame = await run.io_bound(camera.read_frame)
-        if frame is None:
-            return placeholder_json_response
-
-        image_result = await run.cpu_bound(image_processor.process_frame, frame)
-
-        return _to_json_response(image_result, placeholder_bytes)
 
     @app.get('/video/frame/base')
     async def grab_base_frame() -> Response:
@@ -55,45 +42,45 @@ def setup_api(camera:  Camera, image_processor: ImageBaseProcessor, placeholder_
         if not camera.is_opened():
             return placeholder_json_response
 
-        frame = await run.cpu_bound(camera.read_frame)
+        frame = await run.io_bound(camera.read_frame)
 
         if frame is None:
             return placeholder_json_response
 
-        processed = await run.cpu_bound(image_processor.process_frame, frame)
+        processed = await run.cpu_bound(base_processor.process_frame, frame)
         return _to_json_response(processed, placeholder_bytes)
 
     @app.get('/video/frame/calibration')
-    async def grab_base_frame() -> Response:
+    async def grab_calibration_frame() -> Response:
         """
         Uses the Calibration Processor.
         """
         if not camera.is_opened():
             return placeholder_json_response
 
-        frame = await run.cpu_bound(camera.read_frame)
+        frame = await run.io_bound(camera.read_frame)
 
         if frame is None:
             return placeholder_json_response
 
-        processed = await run.cpu_bound(image_processor.process_frame, frame)
+        processed = await run.cpu_bound(calibration_processor.process_frame, frame)
         return _to_json_response(processed, placeholder_bytes)
 
 
     @app.get('/video/frame/anomaly-detection')
-    async def grab_base_frame() -> Response:
+    async def grab_anomaly_detection_frame() -> Response:
         """
         Uses the Anomaly Detection Processor.
         """
         if not camera.is_opened():
             return placeholder_json_response
 
-        frame = await run.cpu_bound(camera.read_frame)
+        frame = await run.io_bound(camera.read_frame)
 
         if frame is None:
             return placeholder_json_response
 
-        processed = await run.cpu_bound(image_processor.process_frame, frame)
+        processed = await run.cpu_bound(anomaly_detector_processor.process_frame, frame)
         return _to_json_response(processed, placeholder_bytes)
 
     async def disconnect() -> None:

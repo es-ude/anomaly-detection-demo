@@ -5,16 +5,18 @@ from pathlib import Path
 
 from camera import Camera
 from api import setup_api
-from image_processing import CookieCalibrator, ImageBaseProcessor, ImageAnomalyDetector
+from src.demo_interface.image_processing import BaseProcessor, CalibrationProcessor, AnomalyDetectorProcessor
 
-zakid_logo = Path(__file__).parent / "assets" / "logo_zakid.png"
-ude_logo = Path(__file__).parent / "assets" / "logo_ude.png"
-placeholder_image = Path(__file__).parent / "assets" / "placeholder.png"
-encoder_visualization = Path(__file__).parent / "assets" / "encoder_visualization.jpeg"
+base_path = Path(__file__).parent
+zakid_logo = base_path / "assets" / "logo_zakid.png"
+ude_logo = base_path / "assets" / "logo_ude.png"
+placeholder_image = base_path / "assets" / "placeholder.png"
+encoder_visualization = base_path / "assets" / "encoder_visualization.jpeg"
 
 camera_instance = Camera()
-image_processor = ImageAnomalyDetector()
-# image_processor = CookieCalibrator()
+base_processor = BaseProcessor()
+calibration_processor = CalibrationProcessor()
+anomaly_detector_processor = AnomalyDetectorProcessor()
 
 
 def setup() -> None:
@@ -26,7 +28,14 @@ def setup() -> None:
 
     ui.separator()
 
-    setup_api(camera=camera_instance, image_processor=image_processor, placeholder_image=placeholder_image)
+    setup_api(
+        camera=camera_instance,
+        base_processor=base_processor,
+        calibration_processor=calibration_processor,
+        anomaly_detector_processor=anomaly_detector_processor,
+        placeholder_image=placeholder_image
+    )
+
     with ui.column().classes('w-full items-center mt-10'):
         with ui.row().classes('w-full justify-center'):
             result_image = ui.interactive_image().classes('w-[800px] h-[800px]').style('object-fit: contain')
@@ -44,11 +53,9 @@ def setup() -> None:
             result_mini_image = ui.interactive_image().classes('w-[150px] h-[150px]').style('object-fit: contain')
 
 
-
-
         async def update_images():
             now = time.time()
-            url = f"http://localhost:8080/video/frame?ts={now}"
+            url = f"http://localhost:8080/video/frame/anomaly-detection?ts={now}"
             async with httpx.AsyncClient() as client:
                 response = await client.get(url)
 
