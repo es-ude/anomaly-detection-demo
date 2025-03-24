@@ -5,6 +5,7 @@ from pathlib import Path
 from dataclasses import asdict, dataclass, fields
 
 from src.anomaly_detector import AnomalyDetector, DetectionResult
+from src.demo_interface.utils import convert_image_to_bytes
 
 
 @dataclass
@@ -34,13 +35,6 @@ class ImageBaseProcessor:
 
         return cropped_frame
 
-    @staticmethod
-    def _convert_image_to_bytes(frame: np.ndarray) -> bytes | None:
-        ret, buffer = cv2.imencode('.jpg', frame)
-        if not ret:
-            return None
-        return buffer.tobytes()
-
     def _process_frame(self, frame: np.ndarray) -> ProcessedImagesResult:
         frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
         center = (frame.shape[1] // 2, frame.shape[0] // 2)
@@ -52,7 +46,7 @@ class ImageBaseProcessor:
             thickness=5
         )
         return ProcessedImagesResult(
-            result=self._convert_image_to_bytes(processed_frame),
+            result=convert_image_to_bytes(processed_frame),
         )
 
     def process_frame(self, frame: np.ndarray) -> ProcessedImagesResult:
@@ -81,7 +75,7 @@ class CookieCalibrator(ImageBaseProcessor):
             thickness=5
         )
         return ProcessedImagesResult(
-            result=self._convert_image_to_bytes(processed_frame),
+            result=convert_image_to_bytes(processed_frame),
         )
 
 
@@ -108,7 +102,7 @@ class ImageAnomalyDetector(ImageBaseProcessor):
         for key in detection_result.keys():
             img = detection_result[key]
             img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
-            img_bytes = self._convert_image_to_bytes(img)
+            img_bytes = convert_image_to_bytes(img)
             detection_result[key] = img_bytes
 
         processed_images_result = ProcessedImagesResult(**detection_result)

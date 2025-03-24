@@ -14,24 +14,12 @@ from dataclasses import asdict
 from src.anomaly_detector import DetectionResult
 from src.demo_interface.camera import Camera
 from src.demo_interface.image_processing import ImageBaseProcessor
+from src.demo_interface.utils import load_image_as_bytes, convert_bytes_to_base64
 
-
-def _load_image_as_bytes(image_path: Path) -> bytes:
-    with open(image_path, "rb") as file:
-        return file.read()
-
-def _convert_image_to_bytes(frame: np.ndarray) -> bytes | None:
-    ret, buffer = cv2.imencode('.jpg', frame)
-    if not ret:
-        return None
-    return buffer.tobytes()
-
-def _convert_bytes_to_base64(data: bytes) -> str:
-    return base64.b64encode(data).decode('utf-8')
 
 def setup_api(camera:  Camera, image_processor: ImageBaseProcessor, placeholder_image: Path):
-    placeholder_bytes = _load_image_as_bytes(placeholder_image)
-    placeholder_json_response = JSONResponse({"result": _convert_bytes_to_base64(placeholder_bytes),})
+    placeholder_bytes = load_image_as_bytes(placeholder_image)
+    placeholder_json_response = JSONResponse({"result": convert_bytes_to_base64(placeholder_bytes),})
 
     @app.get('/video/frame')
     async def grab_video_frame() -> Response:
@@ -45,11 +33,11 @@ def setup_api(camera:  Camera, image_processor: ImageBaseProcessor, placeholder_
         image_result = await run.cpu_bound(image_processor.process_frame, frame)
 
         if image_result is None:
-            return JSONResponse({"result": _convert_bytes_to_base64(_load_image_as_bytes(placeholder_image)),})
+            return JSONResponse({"result": convert_bytes_to_base64(load_image_as_bytes(placeholder_image)),})
 
         image_result = {
-            key: _convert_bytes_to_base64(img_bytes) \
-            if img_bytes is not None else _convert_bytes_to_base64(placeholder_bytes) \
+            key: convert_bytes_to_base64(img_bytes) \
+            if img_bytes is not None else convert_bytes_to_base64(placeholder_bytes) \
             for key, img_bytes in asdict(image_result).items()
         }
         return JSONResponse(image_result)
