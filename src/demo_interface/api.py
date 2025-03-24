@@ -47,6 +47,22 @@ def setup_api(camera:  Camera, image_processor: ImageBaseProcessor, placeholder_
 
         return _to_json_response(image_result, placeholder_bytes)
 
+    @app.get('/video/frame/base')
+    async def grab_base_frame() -> Response:
+        """
+		Uses the Base Processor.
+		"""
+        if not camera.is_opened():
+            return placeholder_json_response
+
+        frame = await run.cpu_bound(camera.read_frame)
+
+        if frame is None:
+            return placeholder_json_response
+
+        processed = await run.cpu_bound(image_processor.process_frame, frame)
+        return _to_json_response(processed, placeholder_bytes)
+
     @app.get('/video/frame/calibration')
     async def grab_base_frame() -> Response:
         """
