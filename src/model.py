@@ -19,6 +19,7 @@ class Decoder(torch.nn.Sequential):
             *_deconv_block(in_channels=64, out_channels=32),  # 64
             *_deconv_block(in_channels=32, out_channels=32),  # 128
             torch.nn.Conv2d(in_channels=32, out_channels=1, kernel_size=1),  # 128
+            torch.nn.Sigmoid(),
         )
 
 
