@@ -38,6 +38,7 @@ class AnomalyDetector:
     def load_model(self) -> None:
         self._model = Autoencoder()
         load_model(self._model, self._saved_model)
+        self._model = torch.compile(self._model)
         self._model.eval()
         self._model.to(self._device)
 
