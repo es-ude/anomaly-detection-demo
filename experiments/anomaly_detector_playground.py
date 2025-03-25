@@ -4,16 +4,13 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
 import numpy.typing as npt
-import torch
 from PIL import Image
 from src.anomaly_detector import AnomalyDetector, DetectionResult
-from torchvision.transforms.functional import crop
+
+from experiments.definitions import DEVICE, IMAGE_HEIGHT, IMAGE_WIDTH
 
 IMAGE_PATH = Path(os.environ["COOKIE_DATASET_DIR"]) / "test" / "bad"
 SAVED_MODEL = Path(os.environ["COOKIE_SAVED_MODEL"])
-INFERENCE_IMG_SIZE = int(os.environ["IMAGE_WIDTH"]), int(os.environ["IMAGE_HEIGHT"])
-DEVICE = torch.device(os.environ["DEVICE"])
-_AREA_TO_CROP = (180, 490, 900, 900)
 
 
 def main() -> None:
@@ -21,8 +18,8 @@ def main() -> None:
 
     anomaly_detector = AnomalyDetector(
         saved_model=SAVED_MODEL,
-        input_img_size=(900, 900),
-        inference_img_size=INFERENCE_IMG_SIZE,
+        input_img_size=(800, 800),
+        inference_img_size=(IMAGE_WIDTH, IMAGE_HEIGHT),
         device=DEVICE,
     )
     anomaly_detector.load_model()
@@ -35,7 +32,6 @@ def main() -> None:
 
 def _load_image(path: Path) -> npt.NDArray[np.uint8]:
     with Image.open(path, "r") as img:
-        img = crop(img, *_AREA_TO_CROP)
         return np.array(img, dtype=np.uint8)
 
 
