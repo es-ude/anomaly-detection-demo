@@ -19,6 +19,7 @@ class CookieAD(Dataset):
         self,
         dataset_dir: Path,
         training_set: bool,
+        dataset_version: int = 2,
         sample_transform: Optional[Callable[[Image], torch.Tensor]] = None,
         target_transform: Optional[Callable[[torch.Tensor], torch.Tensor]] = None,
         in_memory: bool = True,
@@ -27,8 +28,13 @@ class CookieAD(Dataset):
 
         self.dataset_dir = dataset_dir
         self.training_set = training_set
+
+        additional_transforms = []
+        if dataset_version == 1:
+            additional_transforms.append(lambda img: crop(img, *_AREA_TO_CROP))
+
         self.sample_transform = Compose(
-            [ToImage(), lambda img: crop(img, *_AREA_TO_CROP), sample_transform]
+            [ToImage(), *additional_transforms, sample_transform]
         )
         self.target_transform = target_transform
         self.in_memory = in_memory
