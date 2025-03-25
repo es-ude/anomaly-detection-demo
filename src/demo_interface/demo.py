@@ -90,9 +90,11 @@ def anomaly_detection_page() -> None:
     header()
 
     with ui.column().classes('w-full items-center mt-10'):
+
         with ui.row().classes('w-full justify-center'):
             result_image = ui.interactive_image().classes('w-[800px] h-[800px]').style('object-fit: contain')
-        with ui.row().classes('w-full items-center justify-center gap-6 mt-5'):
+
+        with ui.row().classes('w-full items-center justify-center gap-6 mt-7'):
             original_image = ui.interactive_image().classes('w-[150px] h-[150px]').style('object-fit: contain')
             ui.icon("arrow_right").classes("text-4xl font-bold my-auto")
             preprocessed_image = ui.interactive_image().classes('w-[150px] h-[150px]').style('object-fit: contain')
