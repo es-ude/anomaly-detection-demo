@@ -95,8 +95,8 @@ class CalibrationProcessor(AbstractImageProcessor):
         processed_frame = cv2.circle(
             frame.copy(),
             center=center,
-            radius=30,
-            color=(255, 0, 0),
+            radius=175,
+            color=(0, 0, 255),
             thickness=5
         )
         return SingleImageResult(result=convert_image_to_bytes(processed_frame))
