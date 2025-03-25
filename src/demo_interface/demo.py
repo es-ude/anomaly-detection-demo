@@ -5,36 +5,89 @@ from pathlib import Path
 
 from camera import Camera
 from api import setup_api
-from src.demo_interface.image_processing import BaseProcessor, CalibrationProcessor, AnomalyDetectorProcessor
+from src.demo_interface.image_processing import BasicProcessor, CalibrationProcessor, AnomalyDetectorProcessor
 
-base_path = Path(__file__).parent
-zakid_logo = base_path / "assets" / "logo_zakid.png"
-ude_logo = base_path / "assets" / "logo_ude.png"
-placeholder_image = base_path / "assets" / "placeholder.png"
-encoder_visualization = base_path / "assets" / "encoder_visualization.jpeg"
+
+BASE_PATH = Path(__file__).parent
+ZAKID_LOGO = BASE_PATH / "assets" / "logo_zakid.png"
+UDE_LOGO = BASE_PATH / "assets" / "logo_ude.png"
+PLACEHOLDER_IMAGE = BASE_PATH / "assets" / "placeholder.png"
+ENCODER_VISUALIZATION = BASE_PATH / "assets" / "encoder_visualization.jpeg"
 
 camera_instance = Camera()
-base_processor = BaseProcessor()
+basic_processor = BasicProcessor()
 calibration_processor = CalibrationProcessor()
 anomaly_detector_processor = AnomalyDetectorProcessor()
 
 
-def setup() -> None:
-
+def header() -> None:
+    """
+    Header with logos und title. To use in every subpage.
+    """
     with ui.row().classes('w-full items-start'):
-        ui.image(zakid_logo).props('width=200px height=50px fit=scale-down')
+        ui.image(ZAKID_LOGO).props('width=200px height=50px fit=scale-down')
         ui.label('Cookie Anomaly Detection').classes('flex-grow text-center self-end text-2xl font-bold')
-        ui.image(ude_logo).props('width=200px height=50px fit=scale-down')
+        ui.image(UDE_LOGO).props('width=200px height=50px fit=scale-down')
 
     ui.separator()
 
-    setup_api(
-        camera=camera_instance,
-        base_processor=base_processor,
-        calibration_processor=calibration_processor,
-        anomaly_detector_processor=anomaly_detector_processor,
-        placeholder_image=placeholder_image
-    )
+
+@ui.page("/")
+def index_page() -> None:
+    """
+    Standard root page. Automatically redirects to the anomaly detection page.
+    """
+    ui.run_javascript("window.location='/anomaly-detection'")
+
+
+@ui.page("/basic")
+def basis_page() -> None:
+    """
+    Basic image processing page. Image from the camera is just returned and displayed.
+    """
+    header()
+
+    result_image = (ui.interactive_image()
+                    .classes('w-[800px] h-[800px]')
+                    .style('object-fit: contain'))
+
+    async def update_images():
+        url = f"http://localhost:8080/video/frame/basic?ts={time.time()}"
+        async with httpx.AsyncClient() as client:
+            response = await client.get(url)
+        data = response.json()
+        result_image.set_source(f"data:image/jpeg;base64,{data['result']}")
+
+    ui.timer(interval=0.1, callback=update_images)
+
+
+@ui.page("/calibration")
+def calibration_page() -> None:
+    """
+    Calibration image processing page. Image from the camera is returned with a red circle, which the .
+    """
+    header()
+    with ui.column().classes('w-full items-center mt-10'):
+        result_image = (ui.interactive_image()
+                        .classes('w-[800px] h-[800px]')
+                        .style('object-fit: contain'))
+
+    async def update_images():
+        url = f"http://localhost:8080/video/frame/calibration?ts={time.time()}"
+        async with httpx.AsyncClient() as client:
+            response = await client.get(url)
+        data = response.json()
+        result_image.set_source(f"data:image/jpeg;base64,{data['result']}")
+
+    ui.timer(interval=0.1, callback=update_images)
+
+
+@ui.page("/anomaly-detection")
+def anomaly_detection_page() -> None:
+    """
+    Anomaly Detection page. Detected anomalies and intermediate image processing steps are displayed.
+    """
+    header()
 
     with ui.column().classes('w-full items-center mt-10'):
         with ui.row().classes('w-full justify-center'):
@@ -44,7 +97,7 @@ def setup() -> None:
             ui.icon("arrow_right").classes("text-4xl font-bold my-auto")
             preprocessed_image = ui.interactive_image().classes('w-[150px] h-[150px]').style('object-fit: contain')
             ui.icon("arrow_right").classes("text-4xl font-bold my-auto")
-            ui.image(str(encoder_visualization)).classes('w-[200px] h-[150px]').style('object-fit: contain')
+            ui.image(str(ENCODER_VISUALIZATION)).classes('w-[200px] h-[150px]').style('object-fit: contain')
             ui.icon("arrow_right").classes("text-4xl font-bold my-auto")
             reconstructed_image = ui.interactive_image().classes('w-[150px] h-[150px]').style('object-fit: contain')
             ui.icon("arrow_right").classes("text-4xl font-bold my-auto")
@@ -68,8 +121,17 @@ def setup() -> None:
             result_mini_image.set_source(f"data:image/jpeg;base64,{data['result']}")
 
 
-        # ui.timer(interval=0.1, callback=lambda: video_image.set_source(f'/video/frame?{time.time()}'))
         ui.timer(interval=0.1, callback=update_images)
 
-app.on_startup(setup)
+
+def on_startup():
+    setup_api(
+        camera=camera_instance,
+        basic_processor=basic_processor,
+        calibration_processor=calibration_processor,
+        anomaly_detector_processor=anomaly_detector_processor,
+        placeholder_image=PLACEHOLDER_IMAGE
+    )
+
+app.on_startup(on_startup)
 ui.run()
