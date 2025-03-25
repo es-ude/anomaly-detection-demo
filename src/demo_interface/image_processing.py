@@ -77,7 +77,7 @@ class AbstractImageProcessor(ABC):
         return self._process_frame(cropped_frame)
 
 
-class BaseProcessor(AbstractImageProcessor):
+class BasicProcessor(AbstractImageProcessor):
     """
     Simple Processing class for just return the received frame.
     """

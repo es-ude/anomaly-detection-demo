@@ -7,7 +7,7 @@ from pathlib import Path
 from dataclasses import asdict
 
 from src.demo_interface.camera import Camera
-from src.demo_interface.image_processing import BaseProcessor, CalibrationProcessor, AnomalyDetectorProcessor, AbstractImageProcessor
+from src.demo_interface.image_processing import BasicProcessor, CalibrationProcessor, AnomalyDetectorProcessor, AbstractImageProcessor
 from src.demo_interface.utils import load_image_as_bytes, convert_bytes_to_base64
 
 
@@ -44,7 +44,7 @@ async def handle_frame_request(
 
 def setup_api(
         camera:  Camera,
-        base_processor: BaseProcessor,
+        basic_processor: BasicProcessor,
         calibration_processor: CalibrationProcessor,
         anomaly_detector_processor: AnomalyDetectorProcessor,
         placeholder_image: Path)\
@@ -52,14 +52,14 @@ def setup_api(
     placeholder_bytes = load_image_as_bytes(placeholder_image)
     placeholder_json_response = JSONResponse({"result": convert_bytes_to_base64(placeholder_bytes),})
 
-    @app.get('/video/frame/base')
-    async def grab_base_frame() -> Response:
+    @app.get('/video/frame/basic')
+    async def grab_basic_frame() -> Response:
         """
 		Uses the Base Processor.
 		"""
         return await handle_frame_request(
             camera=camera,
-            processor=base_processor,
+            processor=basic_processor,
             placeholder_bytes=placeholder_bytes,
             placeholder_json_response=placeholder_json_response
         )
