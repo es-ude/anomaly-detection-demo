@@ -3,12 +3,13 @@ from pathlib import Path
 
 import pandas as pd
 import torch
-
 from src.persistence import save_model as save_model_to_disk
 from src.reproducibility import get_commit_hash
 
 IMAGE_WIDTH = int(os.environ["IMAGE_WIDTH"])
 IMAGE_HEIGHT = int(os.environ["IMAGE_HEIGHT"])
+DEVICE = torch.device(os.environ["DEVICE"])
+NUM_WORKERS = int(os.environ["NUM_WORKERS"])
 
 
 def save_model(model: torch.nn.Module, destination: Path) -> None:

@@ -36,7 +36,22 @@ class Autoencoder(torch.nn.Module):
 
 def _conv_block(in_channels: int, out_channels: int) -> list[torch.nn.Module]:
     return [
-        torch.nn.Conv2d(in_channels, out_channels, kernel_size=5, stride=2, padding=2),
+        torch.nn.Conv2d(
+            in_channels=in_channels,
+            out_channels=in_channels,
+            kernel_size=5,
+            stride=2,
+            padding=2,
+            groups=in_channels,
+        ),
+        torch.nn.Conv2d(
+            in_channels=in_channels,
+            out_channels=out_channels,
+            kernel_size=1,
+            stride=1,
+            padding=0,
+            groups=1,
+        ),
         torch.nn.ReLU(),
     ]
 
@@ -44,12 +59,22 @@ def _conv_block(in_channels: int, out_channels: int) -> list[torch.nn.Module]:
 def _deconv_block(in_channels: int, out_channels: int) -> list[torch.nn.Module]:
     return [
         torch.nn.ConvTranspose2d(
-            in_channels,
-            out_channels,
+            in_channels=in_channels,
+            out_channels=in_channels,
             kernel_size=5,
             stride=2,
             padding=2,
             output_padding=1,
+            groups=in_channels,
+        ),
+        torch.nn.ConvTranspose2d(
+            in_channels=in_channels,
+            out_channels=out_channels,
+            kernel_size=1,
+            stride=1,
+            padding=0,
+            output_padding=0,
+            groups=1,
         ),
         torch.nn.ReLU(),
     ]

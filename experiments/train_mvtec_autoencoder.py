@@ -1,22 +1,23 @@
 import os
 from pathlib import Path
 
-import torch
+from src.datasets.mvtec_ad import MVTecAD
+from src.model import Autoencoder
+from src.preprocessing import TrainingPreprocessing
+from src.training import train_autoencoder
 from torch.utils.data import Dataset, random_split
 from torchsummary import summary
 from torchvision.transforms.v2 import RandomErasing
 
 from experiments.definitions import (
+    DEVICE,
     IMAGE_HEIGHT,
     IMAGE_WIDTH,
+    NUM_WORKERS,
     save_history,
     save_model,
     save_version,
 )
-from src.datasets.mvtec_ad import MVTecAD
-from src.model import Autoencoder
-from src.preprocessing import TrainingPreprocessing
-from src.training import train_autoencoder
 
 SAVED_MODEL_FILE = Path(os.environ["MVTEC_SAVED_MODEL"])
 HISTORY_FILE = Path(os.environ["MVTEC_HISTORY_FILE"])
@@ -38,8 +39,8 @@ def main() -> None:
         learning_rate=1e-3,
         weight_decay=0,
         augment_input_image=RandomErasing(p=1, scale=(0.25, 0.25), value="random"),
-        num_workers=int(os.environ["NUM_WORKERS"]),
-        device=torch.device(os.environ["DEVICE"]),
+        num_workers=NUM_WORKERS,
+        device=DEVICE,
     )
 
     save_model(model, SAVED_MODEL_FILE)
