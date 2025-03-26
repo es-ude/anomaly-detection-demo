@@ -117,6 +117,8 @@ class AnomalyDetectorProcessor(AbstractImageProcessor):
         return self.anomaly_detector.detect(frame)
 
     def _process_frame(self, frame: np.ndarray) -> SingleImageResult | AnomalyResult:
+        # images are flipped for a more intuitive look in the ui
+        frame = cv2.flip(frame, 1)
         frame = np.array(frame, dtype=np.uint8)
         result = self._detect_anomaly(frame)
         result = asdict(result)
