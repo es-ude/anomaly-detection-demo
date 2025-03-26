@@ -38,7 +38,8 @@ async def handle_frame_request(
     if frame is None:
         return placeholder_json_response
 
-    processed = await run.cpu_bound(processor.process_frame, frame)
+    # processed = await run.cpu_bound(processor.process_frame, frame)
+    processed = await run.io_bound(processor.process_frame, frame)
     return _to_json_response(processed, placeholder_bytes)
 
 

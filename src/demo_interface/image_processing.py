@@ -1,5 +1,6 @@
 import cv2
 import numpy as np
+import torch
 
 from pathlib import Path
 from dataclasses import asdict, dataclass
@@ -110,6 +111,7 @@ class AnomalyDetectorProcessor(AbstractImageProcessor):
             saved_model=Path("/Users/florianhettstedt/projects/anomaly-detection-demo/model_checkpoints/cookie/model.pt"),
             input_img_size=(self.cropped_frame_length, self.cropped_frame_length),
             inference_img_size=inference_img_size,
+            device=torch.device("mps")
         )
         self.anomaly_detector.load_model()
 
