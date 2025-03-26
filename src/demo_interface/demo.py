@@ -23,7 +23,7 @@ height_big_image = 750
 width_big_image = 750
 height_small_image_container = 200
 width_small_image_container = 200
-height_small_image = 150
+small_image_length = 175
 
 
 
@@ -104,10 +104,10 @@ def anomaly_detection_page() -> None:
             residuals_image = ui.interactive_image().classes(f'w-[{width_big_image}]px] h-[{height_big_image}px]').style('object-fit: contain')
             result_image = ui.interactive_image().classes(f'w-[{width_big_image}]px] h-[{height_big_image}px]').style('object-fit: contain')
 
-        with ui.row().classes('w-full items-center justify-center gap-6 mt-2'):
+        with ui.row().classes('w-full items-center justify-center gap-6 mt-1'):
             with ui.column().classes(f'w-[{width_small_image_container}px] h-[{height_small_image_container}px] items-center justify-center'):
                 original_image = ui.interactive_image() \
-                    .classes(f'w-full h-[{height_small_image}px]') \
+                    .classes(f'w-[{small_image_length}px] h-[{small_image_length}px]') \
                     .style('object-fit: contain')
                 ui.label("Original") \
                     .style("text-align: center; width: 100%; font-weight: bold; color: white;")
@@ -118,7 +118,7 @@ def anomaly_detection_page() -> None:
 
             with ui.column().classes(f'w-[{width_small_image_container}px] h-[{height_small_image_container}px] items-center justify-center'):
                 preprocessed_image = ui.interactive_image() \
-                    .classes(f'w-full h-[{height_small_image}px]') \
+                    .classes(f'w-[{small_image_length}px] h-[{small_image_length}px]') \
                     .style('object-fit: contain')
                 ui.label("Vorverarbeitet") \
                     .style("text-align: center; width: 100%; font-weight: bold; color: white;")
@@ -129,7 +129,7 @@ def anomaly_detection_page() -> None:
 
             with ui.column().classes(f'w-[{width_small_image_container}px] h-[{height_small_image_container}px] items-center justify-center'):
                 ui.image(str(ENCODER_VISUALIZATION)) \
-                    .classes(f'w-full h-[{height_small_image}px]') \
+                    .classes(f'w-[{small_image_length}px] h-[{small_image_length}px]') \
                     .props("fit=scale-down")
                 ui.label("Convolutional Autoencoder") \
                     .style("text-align: center; width: 100%; font-weight: bold; color: white;")
@@ -140,7 +140,7 @@ def anomaly_detection_page() -> None:
 
             with ui.column().classes(f'w-[{width_small_image_container}px] h-[{height_small_image_container}px] items-center justify-center'):
                 reconstructed_image = ui.interactive_image() \
-                    .classes(f'w-full h-[{height_small_image}px]') \
+                    .classes(f'w-[{small_image_length}px] h-[{small_image_length}px]') \
                     .style('object-fit: contain')
                 ui.label("Rekonstruiert") \
                     .style("text-align: center; width: 100%; font-weight: bold; color: white;")
@@ -151,7 +151,7 @@ def anomaly_detection_page() -> None:
 
             with ui.column().classes(f'w-[{width_small_image_container}px] h-[{height_small_image_container}px] items-center justify-center'):
                 mini_residuals_image = ui.interactive_image() \
-                    .classes(f'w-full h-[{height_small_image}px]') \
+                    .classes(f'w-[{small_image_length}px] h-[{small_image_length}px]') \
                     .style('object-fit: contain')
                 ui.label("|Vorverarbeitet - Rekonstruiert|") \
                     .style("text-align: center; width: 100%; font-weight: bold; color: white;")
@@ -162,7 +162,7 @@ def anomaly_detection_page() -> None:
 
             with ui.column().classes(f'w-[{width_small_image_container}px] h-[{height_small_image_container}px] items-center justify-center'):
                 result_mini_image = ui.interactive_image() \
-                    .classes(f'w-full h-[{height_small_image}px]') \
+                    .classes(f'w-[{small_image_length}px] h-[{small_image_length}px]') \
                     .style('object-fit: contain')
                 ui.label("Ergebnis mit Anomalien") \
                     .style("text-align: center; width: 100%; font-weight: bold; color: white;")
