@@ -107,7 +107,7 @@ def anomaly_detection_page() -> None:
 
             ui.icon("arrow_right") \
                 .classes("text-4xl font-bold my-auto") \
-                .style("color: white;")
+                .style("color: white; margin-top: 65px;")
 
             with ui.column().classes('w-[200px] h-[200px] items-center justify-center'):
                 preprocessed_image = ui.interactive_image() \
@@ -118,17 +118,18 @@ def anomaly_detection_page() -> None:
 
             ui.icon("arrow_right") \
                 .classes("text-4xl font-bold my-auto") \
-                .style("color: white;")
+                .style("color: white; margin-top: 65px;")
 
             with ui.column().classes('w-[200px] h-[200px] items-center justify-center'):
                 ui.image(str(ENCODER_VISUALIZATION)) \
-                    .style('max-width: 100%; max-height: 150px; object-fit: contain;')
+                    .classes('w-full h-[150px]') \
+                    .props("fit=scale-down")
                 ui.label("Convolutional Autoencoder") \
                     .style("text-align: center; width: 100%; font-weight: bold; color: white;")
 
             ui.icon("arrow_right") \
                 .classes("text-4xl font-bold my-auto") \
-                .style("color: white;")
+                .style("color: white; margin-top: 65px;")
 
             with ui.column().classes('w-[200px] h-[200px] items-center justify-center'):
                 reconstructed_image = ui.interactive_image() \
@@ -139,7 +140,7 @@ def anomaly_detection_page() -> None:
 
             ui.icon("arrow_right") \
                 .classes("text-4xl font-bold my-auto") \
-                .style("color: white;")
+                .style("color: white; margin-top: 65px;")
 
             with ui.column().classes('w-[200px] h-[200px] items-center justify-center'):
                 mini_residuals_image = ui.interactive_image() \
@@ -150,7 +151,7 @@ def anomaly_detection_page() -> None:
 
             ui.icon("arrow_right") \
                 .classes("text-4xl font-bold my-auto") \
-                .style("color: white;")
+                .style("color: white; margin-top: 65px;")
 
             with ui.column().classes('w-[200px] h-[200px] items-center justify-center'):
                 result_mini_image = ui.interactive_image() \
