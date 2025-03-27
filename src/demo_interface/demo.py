@@ -11,7 +11,7 @@ from src.demo_interface.image_processing import BasicProcessor, CalibrationProce
 BASE_PATH = Path(__file__).parent
 ZAKID_LOGO = BASE_PATH / "assets" / "zakid_logo_weiß.svg"
 UDE_LOGO = BASE_PATH / "assets" / "logo_ude_weiß_transparent.svg"
-PLACEHOLDER_IMAGE = BASE_PATH / "assets" / "placeholder.png"
+PLACEHOLDER_IMAGE = BASE_PATH / "assets" / "placeholder_2.png"
 ENCODER_VISUALIZATION = BASE_PATH / "assets" / "darstellung_encoder_decoder_weiß.png"
 
 camera_instance = Camera()
