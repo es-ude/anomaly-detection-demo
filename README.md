@@ -2,7 +2,7 @@
 
 ## Datasets
 
-The MVTec AD dataset can be downloaded [[here]](https://www.mvtec.com/company/research/datasets/mvtec-ad).
+The MVTec AD dataset can be downloaded [[here]](https://www.mvtec.com/company/research/datasets/mvtec-ad). The cookie dataset is only available internally. Please contact @julianhoever or @florianhettstedt
 
 ## Environment
 
