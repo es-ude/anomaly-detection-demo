@@ -31,8 +31,12 @@ COOKIE_VERSION_FILE=<path to cookie outputs>/commit_hash.txt
 
 ## Run Experiments
 
-To start the training:
-
+### MVTec (Hazelnut) Training
 ```bash
 uv run --env-file=.env experiments/train_mvtec_autoencoder.py
+```
+
+### Cookie Training
+```bash
+uv run --env-file=.env experiments/train_cookie_autoencoder.py
 ```
