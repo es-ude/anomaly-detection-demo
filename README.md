@@ -40,3 +40,14 @@ uv run --env-file=.env experiments/train_mvtec_autoencoder.py
 ```bash
 uv run --env-file=.env experiments/train_cookie_autoencoder.py
 ```
+
+# Training on AmplitUDE HPC
+
+## Zip Folder
+```bash
+zip -r anomaly-detection-demo.zip anomaly-detection-demo -x anomaly-detection-demo/.venv/\*
+```
+This command zips the entire project folder, while excluding the venv directory and its contents.
+
+
+
