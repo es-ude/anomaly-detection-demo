@@ -119,7 +119,7 @@ uv run --env-file=.env python -u experiments/train_cookie_autoencoder.py
 
 submit job: sbatch jobscript.sh </br>
 queue overview: squeue -l </br>
-cancel job scancel <job_id> </br>
+cancel job: scancel <job_id> </br>
 
 
 
