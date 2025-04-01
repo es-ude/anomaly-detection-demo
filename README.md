@@ -61,7 +61,7 @@ This command zips the entire project folder, while excluding the venv directory 
 
 RSYNC
 ```bash
-rsync -avz /path/to/local/directory <unikennung>@gateway.amplitude.uni-due.de:/lustre/scratch/<your-workspace>/
+rsync -avz --exclude '.venv' /path/to/local/directory <unikennung>@gateway.amplitude.uni-due.de:/lustre/scratch/<your-workspace>/
 
 The -a option ensures the file permissions and timestamps are preserved.
 The -v option increases verbosity so you can monitor the transfer.
@@ -117,9 +117,9 @@ uv run --env-file=.env python -u experiments/train_cookie_autoencoder.py
 
 ## Run Job (with slurm)
 
-submit job: sbatch jobscript.sh
-queue overview: squeue -l
-cancel job scancel <job_id>
+submit job: sbatch jobscript.sh </br>
+queue overview: squeue -l </br>
+cancel job scancel <job_id> </br>
 
 
 
