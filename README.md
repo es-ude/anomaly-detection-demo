@@ -51,7 +51,7 @@ This command zips the entire project folder, while excluding the venv directory 
 
 ## Data Storage Concept
 
-/lustre/hpc_home/<unikennun>/: permanent project data (quota=0.5TB)
+/lustre/hpc_home/<unikennun>\/: permanent project data (quota=0.5TB)
 
 /lustre/scratch/<custom-workspace>/: temporary working data (quota=10TB), needs to be created via [workspaces](https://escience-wissr.gitpages.uni-due.de/hpc-support/content/general/workspace.html)
 
