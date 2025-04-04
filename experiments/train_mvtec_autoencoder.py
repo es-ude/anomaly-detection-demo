@@ -21,7 +21,6 @@ from experiments.definitions import (
 
 SAVED_MODEL_FILE = Path(os.environ["MVTEC_SAVED_MODEL"])
 HISTORY_FILE = Path(os.environ["MVTEC_HISTORY_FILE"])
-VERSION_FILE = Path(os.environ["MVTEC_VERSION_FILE"])
 
 
 def main() -> None:
@@ -45,7 +44,6 @@ def main() -> None:
 
     save_model(model, SAVED_MODEL_FILE)
     save_history(history, HISTORY_FILE)
-    save_version(VERSION_FILE)
 
 
 def _autoencoder_datasets() -> list[Dataset]:
