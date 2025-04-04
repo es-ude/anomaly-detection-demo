@@ -1,5 +1,7 @@
 from time import time_ns
 
+import numpy as np
+import numpy.typing as npt
 import torch
 from src.model import Autoencoder
 from src.preprocessing import InferencePreprocessing
@@ -21,6 +23,7 @@ def main() -> None:
             image = preprocess(image)
 
             with torch.no_grad():
+                image = image.to(defs.DEVICE)
                 _ = model(image)
 
         end_time = time_ns()
@@ -29,20 +32,19 @@ def main() -> None:
 
 
 def _get_model() -> Autoencoder:
-    return Autoencoder().to(defs.DEVICE).eval()
+    return Autoencoder().eval().to(defs.DEVICE)
 
 
 def _get_compiled_model() -> torch.nn.Module:
     return torch.compile(_get_model(), mode="max-autotune")
 
 
-def _get_image() -> torch.Tensor:
-    return torch.randint(
+def _get_image() -> npt.NDArray[np.uint8]:
+    return np.random.randint(
         low=0,
         high=256,
-        size=(3, defs.IMAGE_HEIGHT, defs.IMAGE_WIDTH),
-        dtype=torch.uint8,
-    ).to(defs.DEVICE)
+        size=(defs.IMAGE_HEIGHT, defs.IMAGE_WIDTH, 3),
+    ).astype(np.uint8)
 
 
 if __name__ == "__main__":
