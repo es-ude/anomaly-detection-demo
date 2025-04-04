@@ -16,7 +16,6 @@ from experiments.definitions import (
     NUM_WORKERS,
     save_history,
     save_model,
-    save_version,
 )
 
 SAVED_MODEL_FILE = Path(os.environ["COOKIE_SAVED_MODEL"])
@@ -45,7 +44,6 @@ def main() -> None:
 
     save_model(model, SAVED_MODEL_FILE)
     save_history(history, HISTORY_FILE)
-    save_version(VERSION_FILE)
 
 
 def _autoencoder_datasets() -> list[Dataset]:
