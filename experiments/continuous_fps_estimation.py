@@ -9,11 +9,10 @@ from src.preprocessing import InferencePreprocessing
 import definitions as defs
 
 BATCH_SIZE = 100
-ENGINE = "qnnpack"
 
 
 def main() -> None:
-    model = _get_quantized_model()
+    model = _get_model()
     preprocess = InferencePreprocessing(defs.IMAGE_WIDTH, defs.IMAGE_HEIGHT)
 
     while True:
@@ -24,7 +23,7 @@ def main() -> None:
             image = preprocess(image)
 
             with torch.no_grad():
-                image = image.to(defs.DEVICE).unsqueeze(0)
+                image = image.to(defs.DEVICE)
                 _ = model(image)
 
         end_time = time_ns()
@@ -38,15 +37,6 @@ def _get_model() -> Autoencoder:
 
 def _get_compiled_model() -> torch.nn.Module:
     return torch.compile(_get_model(), mode="max-autotune")
-
-
-def _get_quantized_model() -> torch.nn.Module:
-    torch.backends.quantized.engine = ENGINE
-    model_fp32 = Autoencoder()
-    model_fp32.qconfig = torch.ao.quantization.get_default_qconfig(ENGINE)
-    model_fp32_prepared = torch.ao.quantization.prepare(model_fp32)
-    model_int8 = torch.ao.quantization.convert(model_fp32_prepared)
-    return model_int8
 
 
 def _get_image() -> npt.NDArray[np.uint8]:
