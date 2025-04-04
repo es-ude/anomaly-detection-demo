@@ -12,7 +12,7 @@ BATCH_SIZE = 100
 
 
 def main() -> None:
-    model = _get_model()
+    model = _get_compiled_model()
     preprocess = InferencePreprocessing(defs.IMAGE_WIDTH, defs.IMAGE_HEIGHT)
 
     while True:
@@ -36,7 +36,7 @@ def _get_model() -> Autoencoder:
 
 
 def _get_compiled_model() -> torch.nn.Module:
-    return torch.compile(_get_model(), mode="max-autotune")
+    return torch.compile(_get_model(), backend="aot_eager")
 
 
 def _get_image() -> npt.NDArray[np.uint8]:
