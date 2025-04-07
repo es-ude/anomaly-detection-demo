@@ -1,6 +1,7 @@
 from collections.abc import Callable
 from functools import partial
 
+import wandb
 import torch
 from torch.utils.data import DataLoader, Dataset
 
@@ -12,6 +13,7 @@ def train_autoencoder(
     batch_size: int,
     epochs: int,
     learning_rate: float,
+    run: wandb.wandb_sdk.wandb_run.Run,
     weight_decay: float = 0,
     augment_input_image: Callable[[torch.Tensor], torch.Tensor] = lambda x: x,
     num_workers: int = 0,
@@ -51,6 +53,7 @@ def train_autoencoder(
 
             running_loss += loss.item() * (len(original_input) / num_samples_train)
 
+        run.log({"train/loss": running_loss}, step=epoch)
         history["train_reconst_mse"].append(running_loss)
 
         model.eval()
@@ -64,6 +67,7 @@ def train_autoencoder(
                 loss = loss_fn(reconstructed, input)
                 running_loss += loss.item() * (len(input) / num_samples_test)
 
+        run.log({"eval/loss": running_loss}, step=epoch)
         history["test_reconst_mse"].append(running_loss)
 
         print(

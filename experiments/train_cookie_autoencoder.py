@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+import wandb
 
 from src.datasets.cookie_ad import CookieAD
 from src.model import Autoencoder
@@ -24,6 +25,12 @@ VERSION_FILE = Path(os.environ["COOKIE_VERSION_FILE"])
 
 
 def main() -> None:
+
+    run = wandb.init(
+        entity="florian-hettstedt-universit-t-duisburg-essen",
+        project="anomaly-detection",
+    )
+
     model = Autoencoder()
     summary(model, input_size=(1, IMAGE_WIDTH, IMAGE_HEIGHT), device="cpu")
 
@@ -40,10 +47,13 @@ def main() -> None:
         augment_input_image=RandomErasing(p=1, scale=(0.25, 0.25), value="random"),
         num_workers=NUM_WORKERS,
         device=DEVICE,
+        run=run
     )
 
     save_model(model, SAVED_MODEL_FILE)
     save_history(history, HISTORY_FILE)
+
+    run.finish()
 
 
 def _autoencoder_datasets() -> list[Dataset]:

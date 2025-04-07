@@ -23,6 +23,7 @@ dependencies = [
     "torchsummary>=1.5.1",
     "torchvision>=0.21.0",
     "wandb>=0.19.9",
+    "websockets>=15.0.1",
 ]
 
 [build-system]

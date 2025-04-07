@@ -99,6 +99,7 @@ dependencies = [
     { name = "torchsummary" },
     { name = "torchvision" },
     { name = "wandb" },
+    { name = "websockets" },
 ]
 
 [package.dev-dependencies]
@@ -125,6 +126,7 @@ requires-dist = [
     { name = "torchsummary", specifier = ">=1.5.1" },
     { name = "torchvision", specifier = ">=0.21.0" },
     { name = "wandb", specifier = ">=0.19.9" },
+    { name = "websockets", specifier = ">=15.0.1" },
 ]
 
 [package.metadata.requires-dev]
