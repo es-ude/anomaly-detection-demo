@@ -111,7 +111,7 @@ class AnomalyDetectorProcessor(AbstractImageProcessor):
             saved_model=Path(__file__).parents[2] / "model_checkpoints/cookie/model.pt",
             input_img_size=(self.cropped_frame_length, self.cropped_frame_length),
             inference_img_size=inference_img_size,
-            device=torch.device("mps")
+            device=torch.device("cpu")
         )
         self.anomaly_detector.load_model()
 

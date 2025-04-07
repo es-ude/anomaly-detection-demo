@@ -4,8 +4,9 @@ from nicegui import ui, app
 from pathlib import Path
 
 from camera import Camera
-from api import setup_api
+from api import handle_frame_request
 from src.demo_interface.image_processing import BasicProcessor, CalibrationProcessor, AnomalyDetectorProcessor
+from utils import load_image_as_bytes
 
 
 BASE_PATH = Path(__file__).parent
@@ -18,6 +19,7 @@ camera_instance = Camera()
 basic_processor = BasicProcessor()
 calibration_processor = CalibrationProcessor()
 anomaly_detector_processor = AnomalyDetectorProcessor()
+placeholder_bytes = load_image_as_bytes(PLACEHOLDER_IMAGE)
 
 height_big_image = 750
 width_big_image = 750
@@ -169,12 +171,16 @@ def anomaly_detection_page() -> None:
 
 
         async def update_images():
-            now = time.time()
-            url = f"http://localhost:8080/video/frame/anomaly-detection?ts={now}"
-            async with httpx.AsyncClient() as client:
-                response = await client.get(url)
+            # now = time.time()
+            # url = f"http://localhost:8080/video/frame/anomaly-detection?ts={now}"
+            # async with httpx.AsyncClient() as client:
+            #     response = await client.get(url)
+            #
+            # data = response.json()
 
-            data = response.json()
+            data = await handle_frame_request(
+                camera_instance, anomaly_detector_processor, placeholder_bytes
+            )
             result_image.set_source(f"data:image/jpeg;base64,{data['result']}")
             original_image.set_source(f"data:image/jpeg;base64,{data['original']}")
             preprocessed_image.set_source(f"data:image/jpeg;base64,{data['preprocessed']}")
@@ -187,15 +193,15 @@ def anomaly_detection_page() -> None:
         ui.timer(interval=0.1, callback=update_images)
 
 
-def on_startup():
-    setup_api(
-        camera=camera_instance,
-        basic_processor=basic_processor,
-        calibration_processor=calibration_processor,
-        anomaly_detector_processor=anomaly_detector_processor,
-        placeholder_image=PLACEHOLDER_IMAGE
-    )
-    time.sleep(2)
+# def on_startup():
+#     setup_api(
+#         camera=camera_instance,
+#         basic_processor=basic_processor,
+#         calibration_processor=calibration_processor,
+#         anomaly_detector_processor=anomaly_detector_processor,
+#         placeholder_image=PLACEHOLDER_IMAGE
+#     )
+#     time.sleep(2)
 
-app.on_startup(on_startup)
-ui.run()
+# app.on_startup(on_startup)
+ui.run(reload=False)

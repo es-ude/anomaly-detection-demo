@@ -47,7 +47,8 @@ class AnomalyDetector:
             self.load_model()
 
         preprocessed_image = self._preprocessing(image)
-        reconstructed_image = self._perform_inference(preprocessed_image)
+        reconstructed_image = preprocessed_image
+        # reconstructed_image = self._perform_inference(preprocessed_image)
         residuals = _compute_residuals(preprocessed_image, reconstructed_image)
         resized_residuals = self._resize_residuals(residuals)
         return DetectionResult(
