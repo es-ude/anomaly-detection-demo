@@ -35,12 +35,12 @@ COOKIE_CKPT_DIR=<absolute_path_to_project_dir>/src/anomaly_detection/model_check
 
 ### MVTec (Hazelnut) Training
 ```bash
-uv run --env-file=.env experiments/train_mvtec_autoencoder.py
+uv run --env-file=.env src/anomaly_detection/experiments/train_mvtec_autoencoder.py
 ```
 
 ### Cookie Training
 ```bash
-uv run --env-file=.env experiments/train_cookie_autoencoder.py
+uv run --env-file=.env src/anomaly_detection/experiments/train_cookie_autoencoder.py
 ```
 
 # Training on AmplitUDE HPC
@@ -114,7 +114,7 @@ pip install uv
 
 uv sync
 
-uv run --env-file=.env python -u experiments/train_cookie_autoencoder.py
+uv run --env-file=.env python -u src/anomaly_detection/experiments/train_cookie_autoencoder.py
 ```
 
 ## Run Job (with slurm)
