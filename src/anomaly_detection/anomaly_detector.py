@@ -7,9 +7,9 @@ import numpy.typing as npt
 import torch
 import torchvision.transforms.v2.functional as tv_func
 
-from src.model import Autoencoder
-from src.persistence import load_model
-from src.preprocessing import InferencePreprocessing
+from src.anomaly_detection.model import Autoencoder
+from src.anomaly_detection.persistence import load_model
+from src.anomaly_detection.preprocessing import InferencePreprocessing
 
 
 @dataclass
@@ -24,12 +24,12 @@ class DetectionResult:
 class AnomalyDetector:
     def __init__(
         self,
-        saved_model: Path,
+        model_file: Path,
         input_img_size: tuple[int, int],
         inference_img_size: tuple[int, int],
         device: torch.device = torch.device("cpu"),
     ) -> None:
-        self._saved_model = saved_model
+        self._model_file = model_file
         self._input_img_size = list(input_img_size)
         self._device = device
         self._model = None
@@ -37,7 +37,7 @@ class AnomalyDetector:
 
     def load_model(self) -> None:
         self._model = Autoencoder()
-        load_model(self._model, self._saved_model)
+        load_model(self._model, self._model_file)
         # self._model = torch.compile(self._model, backend="aot_eager")
         self._model.eval()
         self._model.to(self._device)
