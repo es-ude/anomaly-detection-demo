@@ -1,12 +1,12 @@
+from abc import ABC, abstractmethod
+from dataclasses import asdict, dataclass
+from pathlib import Path
+
 import cv2
 import numpy as np
 import torch
 
-from pathlib import Path
-from dataclasses import asdict, dataclass
-from abc import ABC, abstractmethod
-
-from src.anomaly_detector import AnomalyDetector, DetectionResult
+from src.anomaly_detection.anomaly_detector import AnomalyDetector, DetectionResult
 from src.demo_interface.utils import convert_image_to_bytes
 
 
@@ -15,12 +15,14 @@ class SingleImageResult:
     """
     Dataclass for only one image result (BaseProcessor and CalibrationProcessor)
     """
+
     result: bytes | None
 
 
 @dataclass
 class AnomalyResult:
     """Dataclass for anomaly detection result with multiple images."""
+
     result: bytes | None
     original: bytes
     preprocessed: bytes
@@ -89,29 +91,24 @@ class BasicProcessor(AbstractImageProcessor):
 
 
 class CalibrationProcessor(AbstractImageProcessor):
-
     def _process_frame(self, frame: np.ndarray) -> SingleImageResult | AnomalyResult:
         frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
         center = (frame.shape[1] // 2, frame.shape[0] // 2)
         processed_frame = cv2.circle(
-            frame.copy(),
-            center=center,
-            radius=175,
-            color=(0, 0, 255),
-            thickness=5
+            frame.copy(), center=center, radius=175, color=(0, 0, 255), thickness=5
         )
         return SingleImageResult(result=convert_image_to_bytes(processed_frame))
 
 
 class AnomalyDetectorProcessor(AbstractImageProcessor):
-
     def __init__(self, inference_img_size: tuple[int, int] = (128, 128)):
         super().__init__()
         self.anomaly_detector = AnomalyDetector(
-            saved_model=Path(__file__).parents[2] / "model_checkpoints/cookie/model.pt",
+            model_file=Path(__file__).parents[1]
+            / "anomaly_detection/model_checkpoints/cookie/model.pt",
             input_img_size=(self.cropped_frame_length, self.cropped_frame_length),
             inference_img_size=inference_img_size,
-            device=torch.device("mps")
+            device=torch.device("mps"),
         )
         self.anomaly_detector.load_model()
 
