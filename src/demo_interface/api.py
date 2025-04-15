@@ -1,27 +1,43 @@
-import signal
+import asyncio
+from typing import Callable, Dict
 
-from fastapi import Response
-from starlette.responses import JSONResponse
-from nicegui import Client, app, core, ui, run
-from pathlib import Path
+from nicegui import run
 from dataclasses import asdict
+from concurrent.futures import ProcessPoolExecutor
 
 from src.demo_interface.camera import Camera
-from src.demo_interface.image_processing import BasicProcessor, CalibrationProcessor, AnomalyDetectorProcessor, AbstractImageProcessor
-from src.demo_interface.utils import load_image_as_bytes, convert_bytes_to_base64
+from src.demo_interface.image_processing import AbstractImageProcessor
+from src.demo_interface.utils import convert_bytes_to_base64
 
-def _to_json_response(processed, placeholder_bytes) -> JSONResponse:
-    if processed is None:
-        return JSONResponse({"result": convert_bytes_to_base64(placeholder_bytes)})
+cpu_executor = ProcessPoolExecutor(max_workers=10)
 
-    data_dict = {
-        key: convert_bytes_to_base64(img_bytes) \
-            if img_bytes is not None else convert_bytes_to_base64(placeholder_bytes) \
-        for key, img_bytes in asdict(processed).items()
-    }
+class FrameData:
 
-    return JSONResponse(data_dict)
+    def __init__(self, processor: AbstractImageProcessor):
+        self._result = None
+        self._processor = processor
+        self._callback = None
 
+    @property
+    def result(self):
+        return self._result
+
+    @result.setter
+    def result(self, result):
+        if self._callback is not None:
+            self._callback(result)
+        self._result = result
+
+    @property
+    def processor(self):
+        return self._processor
+
+    @processor.setter
+    def processor(self, new_frame_processor: AbstractImageProcessor):
+        self._processor = new_frame_processor
+
+    def set_callback(self, callback: Callable[[Dict], None]):
+        self._callback = callback
 
 def _to_dict_response(processed, placeholder_bytes):
     if processed is None:
@@ -35,7 +51,12 @@ def _to_dict_response(processed, placeholder_bytes):
     return data_dict
 
 
-async def handle_frame_request(
+async def cpu_bound(func, *args, **kwargs):
+    loop = asyncio.get_running_loop()
+    return await loop.run_in_executor(cpu_executor, func, *args, **kwargs)
+
+
+async def _handle_frame_request(
     camera: Camera,
     processor: AbstractImageProcessor,
     placeholder_bytes: bytes,
@@ -48,69 +69,17 @@ async def handle_frame_request(
     if frame is None:
         return {"result": convert_bytes_to_base64(placeholder_bytes)}
 
-    processed = await run.cpu_bound(processor.process_frame, frame)
-    # processed = await run.io_bound(processor.process_frame, frame)
+    processed = await cpu_bound(processor.process_frame, frame)
+
     return _to_dict_response(processed, placeholder_bytes)
 
 
-# def setup_api(
-#         camera:  Camera,
-#         basic_processor: BasicProcessor,
-#         calibration_processor: CalibrationProcessor,
-#         anomaly_detector_processor: AnomalyDetectorProcessor,
-#         placeholder_image: Path)\
-#         :
-#     placeholder_bytes = load_image_as_bytes(placeholder_image)
-#     placeholder_json_response = JSONResponse({"result": convert_bytes_to_base64(placeholder_bytes),})
-#
-#     @app.get('/video/frame/basic')
-#     async def grab_basic_frame() -> Response:
-#         """
-# 		Uses the Base Processor.
-# 		"""
-#         return await handle_frame_request(
-#             camera=camera,
-#             processor=basic_processor,
-#             placeholder_bytes=placeholder_bytes,
-#             placeholder_json_response=placeholder_json_response
-#         )
-#
-#     @app.get('/video/frame/calibration')
-#     async def grab_calibration_frame() -> Response:
-#         """
-#         Uses the Calibration Processor.
-#         """
-#         return await handle_frame_request(
-#             camera=camera,
-#             processor=calibration_processor,
-#             placeholder_bytes=placeholder_bytes,
-#             placeholder_json_response=placeholder_json_response
-#         )
-#
-#
-#     @app.get('/video/frame/anomaly-detection')
-#     async def grab_anomaly_detection_frame() -> Response:
-#         """
-#         Uses the Anomaly Detection Processor.
-#         """
-#         return await handle_frame_request(
-#             camera=camera,
-#             processor=anomaly_detector_processor,
-#             placeholder_bytes=placeholder_bytes,
-#             placeholder_json_response=placeholder_json_response
-#         )
-#
-#     async def disconnect() -> None:
-#         for client_id in Client.instances:
-#             await core.sio.disconnect(client_id)
-#
-#     def handle_sigint(signum, frame) -> None:
-#         ui.timer(0.1, disconnect, once=True)
-#         ui.timer(1, lambda: signal.default_int_handler(signum, frame), once=True)
-#
-#     async def cleanup() -> None:
-#         await disconnect()
-#         camera.release()
-#
-#     app.on_shutdown(cleanup)
-#     signal.signal(signal.SIGINT, handle_sigint)
+async def start_frame_updates(
+        frame_data: FrameData,
+        camera: Camera,
+        placeholder_bytes: bytes,
+) -> None:
+    while True:
+        result = await _handle_frame_request(camera, frame_data.processor, placeholder_bytes)
+        frame_data.result = result
+        await asyncio.sleep(0.1)
