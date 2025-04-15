@@ -6,7 +6,7 @@ from pathlib import Path
 from dataclasses import asdict, dataclass
 from abc import ABC, abstractmethod
 
-from src.anomaly_detector import AnomalyDetector, DetectionResult
+from src.anomaly_detection.anomaly_detector import AnomalyDetector, DetectionResult
 from src.demo_interface.utils import convert_image_to_bytes
 
 
@@ -108,7 +108,7 @@ class AnomalyDetectorProcessor(AbstractImageProcessor):
     def __init__(self, inference_img_size: tuple[int, int] = (128, 128)):
         super().__init__()
         self.anomaly_detector = AnomalyDetector(
-            saved_model=Path(__file__).parents[2] / "model_checkpoints/cookie/model.pt",
+            model_file=Path(__file__).parents[2] / "src/anomaly_detection/model_checkpoints/cookie/model.pt",
             input_img_size=(self.cropped_frame_length, self.cropped_frame_length),
             inference_img_size=inference_img_size,
             device=torch.device("cpu")
