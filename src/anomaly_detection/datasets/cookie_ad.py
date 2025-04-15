@@ -8,7 +8,7 @@ from torchvision.transforms.v2 import Compose, ToImage
 from torchvision.transforms.v2.functional import crop
 from torchvision.tv_tensors import Image
 
-from src.datasets.image_utils import get_image_paths, load_image
+from src.anomaly_detection.datasets.image_utils import get_image_paths, load_image
 
 CLASSES = dict(train=["good"], test=["good", "bad"])
 _AREA_TO_CROP = (180, 490, 900, 900)

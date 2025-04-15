@@ -1,8 +1,8 @@
-import numpy as np
-import cv2
 import base64
-
 from pathlib import Path
+
+import cv2
+import numpy as np
 
 
 def convert_image_to_bytes(frame: np.ndarray) -> bytes | None:

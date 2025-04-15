@@ -6,7 +6,7 @@ from torch.utils.data import Dataset
 from torchvision.transforms.v2 import Compose, ToImage
 from torchvision.tv_tensors import Image
 
-from src.datasets.image_utils import get_image_paths, load_image
+from src.anomaly_detection.datasets.image_utils import get_image_paths, load_image
 
 from .constants import CLASSES
 

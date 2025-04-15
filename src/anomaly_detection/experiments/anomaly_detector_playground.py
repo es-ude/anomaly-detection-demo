@@ -4,20 +4,27 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
 import numpy.typing as npt
+import torch
 from PIL import Image
-from src.anomaly_detector import AnomalyDetector, DetectionResult
 
-from experiments.definitions import DEVICE, IMAGE_HEIGHT, IMAGE_WIDTH
+from src.anomaly_detection.anomaly_detector import AnomalyDetector, DetectionResult
 
-IMAGE_PATH = Path(os.environ["COOKIE_DATASET_DIR"]) / "test" / "bad"
-SAVED_MODEL = Path(os.environ["COOKIE_SAVED_MODEL"])
+IMAGE_WIDTH = int(os.environ["IMAGE_WIDTH"])
+IMAGE_HEIGHT = int(os.environ["IMAGE_HEIGHT"])
+DEVICE = torch.device(os.environ["DEVICE"])
+
+CKPT_DIR = Path(os.environ["COOKIE_CKPT_DIR"])
+MODEL_FILE_NAME = os.environ["MODEL_FILE_NAME"]
+
+DATASET_DIR = Path(os.environ["COOKIE_DATASET_DIR"])
+IMAGE_PATH = DATASET_DIR / "test" / "bad"
 
 
 def main() -> None:
     all_images = list(IMAGE_PATH.glob("*.jpg"))
 
     anomaly_detector = AnomalyDetector(
-        saved_model=SAVED_MODEL,
+        model_file=CKPT_DIR / MODEL_FILE_NAME,
         input_img_size=(800, 800),
         inference_img_size=(IMAGE_WIDTH, IMAGE_HEIGHT),
         device=DEVICE,

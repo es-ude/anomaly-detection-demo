@@ -8,37 +8,39 @@ The MVTec AD dataset can be downloaded [[here]](https://www.mvtec.com/company/re
 
 Example environment file (`.env`) to set all required environment variables:
 
-```bash
-DEVICE=<e.g. cuda, mps or cpu>
+```dotenv
+DEVICE=<cpu/mps/cuda>
 NUM_WORKERS=0
 
 IMAGE_WIDTH=128
 IMAGE_HEIGHT=128
 
-MVTEC_DATASET_DIR=<path to mvtec dataset>
+HISTORY_FILE_NAME=history.csv
+VERSION_FILE_NAME=commit_hash.txt
+MODEL_FILE_NAME=model.pt
+QUANT_MODEL_FILE_NAME=model_int8.pt
+
+MVTEC_DATASET_DIR=<absolute_path_to_dataset>
 MVTEC_OBJECT=hazelnut
+MVTEC_OUTPUT_DIR=<absolute_path_to_output_dir>/mvtec
+MVTEC_CKPT_DIR=<absolute_path_to_project_dir>/src/anomaly_detection/model_checkpoints/mvtec
 
-MVTEC_SAVED_MODEL=<path to mvtec outputs>/model.pt
-MVTEC_HISTORY_FILE=<path to mvtec outputs>/history.csv
-MVTEC_VERSION_FILE=outputs/mvtec<path to mvtec outputs>/commit_hash.txt
+COOKIE_DATASET_DIR=<absolute_path_to_dataset>/v2
+COOKIE_OUTPUT_DIR=<absolute_path_to_output_dir>/cookie
+COOKIE_CKPT_DIR=<absolute_path_to_project_dir>/src/anomaly_detection/model_checkpoints/cookie
 
-COOKIE_DATASET_DIR=<path to cookie dataset>
-
-COOKIE_SAVED_MODEL=<path to cookie outputs>/model.pt
-COOKIE_HISTORY_FILE=<path to cookie outputs>/history.csv
-COOKIE_VERSION_FILE=<path to cookie outputs>/commit_hash.txt
 ```
 
 ## Run Experiments
 
 ### MVTec (Hazelnut) Training
 ```bash
-uv run --env-file=.env experiments/train_mvtec_autoencoder.py
+uv run --env-file=.env src/anomaly_detection/experiments/train_mvtec_autoencoder.py
 ```
 
 ### Cookie Training
 ```bash
-uv run --env-file=.env experiments/train_cookie_autoencoder.py
+uv run --env-file=.env src/anomaly_detection/experiments/train_cookie_autoencoder.py
 ```
 
 # Training on AmplitUDE HPC
@@ -112,7 +114,7 @@ pip install uv
 
 uv sync
 
-uv run --env-file=.env python -u experiments/train_cookie_autoencoder.py
+uv run --env-file=.env python -u src/anomaly_detection/experiments/train_cookie_autoencoder.py
 ```
 
 ## Run Job (with slurm)
