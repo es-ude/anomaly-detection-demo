@@ -28,15 +28,6 @@ class AnomalyResult:
     residuals: bytes
 
 
-@dataclass
-class ProcessedImagesResult:
-    result: bytes | None
-    original: bytes | None = None
-    preprocessed: bytes | None = None
-    reconstructed: bytes | None = None
-    residuals: bytes | None = None
-
-
 class AbstractImageProcessor(ABC):
     """
     Abstract base class for all image processor classes.
