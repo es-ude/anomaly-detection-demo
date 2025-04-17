@@ -17,7 +17,7 @@ DATASET_DIR = Path(os.environ["COOKIE_DATASET_DIR"])
 
 def main() -> None:
     model = Autoencoder()
-    summary(model, input_size=(1, defs.IMAGE_WIDTH, defs.IMAGE_HEIGHT), device="cpu")
+    summary(model, input_size=(1, defs.IMAGE_HEIGHT, defs.IMAGE_WIDTH), device="cpu")
 
     ds_train, ds_test = _autoencoder_datasets()
 
@@ -43,7 +43,7 @@ def _autoencoder_datasets() -> list[Dataset]:
     ds = CookieAD(
         dataset_dir=DATASET_DIR,
         training_set=True,
-        sample_transform=TrainingPreprocessing(defs.IMAGE_WIDTH, defs.IMAGE_HEIGHT),
+        sample_transform=TrainingPreprocessing(defs.IMAGE_HEIGHT, defs.IMAGE_WIDTH),
         in_memory=True,
     )
     return random_split(ds, lengths=[0.8, 0.2])
