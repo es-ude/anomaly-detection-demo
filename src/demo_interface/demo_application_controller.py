@@ -5,16 +5,21 @@ from dataclasses import fields
 from nicegui import run
 
 from src.demo_interface.camera import Camera
-from src.demo_interface.image_processing import AbstractImageProcessor, AnomalyResult
+from src.demo_interface.image_processing import AnomalyResult, Image, ImageProcessor
 
 type UpdateUICallback = Callable[[dict[str, str] | str], None]
+
+
+class _NoneImageProcessor:
+    def process(self, image: Image) -> None:
+        return None
 
 
 class DemoApplicationController:
     def __init__(self, camera: Camera, placeholder_image: bytes) -> None:
         self._camera = camera
         self._placeholder_image = placeholder_image
-        self._image_processor: AbstractImageProcessor | None = None
+        self._image_processor: ImageProcessor = _NoneImageProcessor()
         self._update_ui_callback: UpdateUICallback = lambda _: None
 
     async def run(self) -> None:
@@ -26,14 +31,12 @@ class DemoApplicationController:
     def set_update_ui_callback(self, callback: UpdateUICallback) -> None:
         self._update_ui_callback = callback
 
-    def set_image_processor(self, image_processor: AbstractImageProcessor) -> None:
+    def set_image_processor(self, image_processor: ImageProcessor) -> None:
         self._image_processor = image_processor
 
     async def _take_and_process_frame(self) -> AnomalyResult | bytes | None:
-        if self._image_processor is None:
-            return None
-        frame = await _cpu_bound(self._camera.read_frame)
-        frame = await _cpu_bound(self._image_processor.process_image, frame)
+        frame = await run.io_bound(self._camera.read_frame)
+        frame = await run.cpu_bound(self._image_processor.process, frame)
         return frame
 
     def _frame_to_ui_data(
@@ -48,12 +51,6 @@ class DemoApplicationController:
                 field.name: _bytes_to_base64(getattr(frame, field.name))
                 for field in fields(frame)  # type: ignore
             }
-
-
-async def _cpu_bound[**P, R](
-    func: Callable[P, R], *args: P.args, **kwargs: P.kwargs
-) -> R:
-    return await run.cpu_bound(func, *args, **kwargs)
 
 
 def _bytes_to_base64(data: bytes) -> str:

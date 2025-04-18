@@ -33,7 +33,7 @@ anomaly_detector_processor = AnomalyDetectorProcessor()
 while True:
     frame = cam.read_frame()
     if frame is not None:
-        detection_result = anomaly_detector_processor.process_image(frame)
+        detection_result = anomaly_detector_processor.process(frame)
         detection_result = asdict(detection_result)
         detection_result = {
             key: bytes_to_cv2_image(value) for key, value in detection_result.items()

@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, fields
 from pathlib import Path
+from typing import Protocol
 
 import cv2
 import numpy as np
@@ -21,28 +22,32 @@ class AnomalyResult:
     superimposed: bytes
 
 
-class AbstractImageProcessor(ABC):
+class ImageProcessor(Protocol):
+    def process(self, image: Image) -> AnomalyResult | bytes | None: ...
+
+
+class _CenterCropImageProcessor(ABC):
     def __init__(self, target_image_size: tuple[int, int]) -> None:
         self.target_image_size = target_image_size
 
     @abstractmethod
-    def _process_image(self, image: Image) -> AnomalyResult | bytes:
+    def _process(self, image: Image) -> AnomalyResult | bytes:
         pass
 
-    def process_image(self, image: Image) -> AnomalyResult | bytes | None:
+    def process(self, image: Image) -> AnomalyResult | bytes | None:
         if image is None:
             return None
         cropped_image = _center_crop(image, self.target_image_size)
-        return self._process_image(cropped_image)
+        return self._process(cropped_image)
 
 
-class BasicProcessor(AbstractImageProcessor):
-    def _process_image(self, image: Image) -> bytes:
+class BasicProcessor(_CenterCropImageProcessor):
+    def _process(self, image: Image) -> bytes:
         return _rgb_image_to_bytes(image)
 
 
-class CalibrationProcessor(AbstractImageProcessor):
-    def _process_image(self, image: Image) -> bytes:
+class CalibrationProcessor(_CenterCropImageProcessor):
+    def _process(self, image: Image) -> bytes:
         image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
         height, width, _ = image.shape
         processed_frame = cv2.circle(
@@ -55,7 +60,7 @@ class CalibrationProcessor(AbstractImageProcessor):
         return _bgr_image_to_bytes(processed_frame)
 
 
-class AnomalyDetectorProcessor(AbstractImageProcessor):
+class AnomalyDetectorProcessor(_CenterCropImageProcessor):
     def __init__(
         self,
         model_file: Path,
@@ -71,7 +76,7 @@ class AnomalyDetectorProcessor(AbstractImageProcessor):
         )
         self.anomaly_detector.load_model()
 
-    def _process_image(self, image: Image) -> AnomalyResult:
+    def _process(self, image: Image) -> AnomalyResult:
         image = _flip(image, horizontal=True, vertical=True)
         result = self._detect_anomaly(image)
         images = {
