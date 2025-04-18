@@ -235,9 +235,5 @@ def anomaly_detection_page() -> None:
     app_controller.set_update_ui_callback(update_images)
 
 
-@app.on_startup
-def startup():
-    asyncio.create_task(app_controller.run())
-
-
+app.on_startup(lambda: asyncio.create_task(app_controller.run()))
 ui.run(reload=True)
