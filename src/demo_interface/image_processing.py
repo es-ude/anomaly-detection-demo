@@ -14,8 +14,6 @@ type Image = npt.NDArray[np.uint8]
 
 @dataclass
 class AnomalyResult:
-    """Dataclass for anomaly detection result with multiple images."""
-
     result: bytes | None
     original: bytes
     preprocessed: bytes
