@@ -4,12 +4,11 @@ version = "0.1.0"
 description = ""
 readme = "README.md"
 authors = [
-    { name = "Julian Hoever", email = "julianhoever@posteo.de" }
+    { name = "Julian Hoever", email = "julianhoever@posteo.de" },
+    { name = "Florian Hettstedt", email = "florian.hettstedt@uni-due.de"}
 ]
 requires-python = ">=3.13"
 dependencies = [
-    "fastapi>=0.115.11",
-    "httpx>=0.28.1",
     "ipykernel>=6.29.5",
     "ipywidgets>=8.1.5",
     "jupyterlab>=4.3.5",
