@@ -15,14 +15,13 @@ class DemoApplicationController:
         self._camera = camera
         self._placeholder_image = placeholder_image
         self._image_processor: AbstractImageProcessor | None = None
-        self._update_ui_callback: UpdateUICallback | None = None
+        self._update_ui_callback: UpdateUICallback = lambda _: None
 
     async def run(self) -> None:
         while True:
-            if self._application_is_initialized:
-                processed_frame = await self._take_and_process_frame()
-                ui_data = self._frame_to_ui_data(processed_frame)
-                self._update_ui_callback(ui_data)
+            processed_frame = await self._take_and_process_frame()
+            ui_data = self._frame_to_ui_data(processed_frame)
+            self._update_ui_callback(ui_data)
 
     def set_update_ui_callback(self, callback: UpdateUICallback) -> None:
         self._update_ui_callback = callback
@@ -30,18 +29,12 @@ class DemoApplicationController:
     def set_image_processor(self, image_processor: AbstractImageProcessor) -> None:
         self._image_processor = image_processor
 
-    @property
-    def _application_is_initialized(self) -> bool:
-        return (
-            self._image_processor is not None and self._update_ui_callback is not None
-        )
-
     async def _take_and_process_frame(self) -> AnomalyResult | bytes | None:
-        def take_and_process() -> AnomalyResult | bytes | None:
-            frame = self._camera.read_frame()
-            return self._image_processor.process_image(frame)
-
-        return await run.cpu_bound(take_and_process)
+        if self._image_processor is None:
+            return None
+        frame = await _cpu_bound(self._camera.read_frame)
+        frame = await _cpu_bound(self._image_processor.process_image, frame)
+        return frame
 
     def _frame_to_ui_data(
         self, frame: AnomalyResult | bytes | None
@@ -55,6 +48,12 @@ class DemoApplicationController:
                 field.name: _bytes_to_base64(getattr(frame, field.name))
                 for field in fields(frame)  # type: ignore
             }
+
+
+async def _cpu_bound[**P, R](
+    func: Callable[P, R], *args: P.args, **kwargs: P.kwargs
+) -> R:
+    return await run.cpu_bound(func, *args, **kwargs)
 
 
 def _bytes_to_base64(data: bytes) -> str:

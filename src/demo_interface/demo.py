@@ -219,18 +219,17 @@ def anomaly_detection_page() -> None:
                     "text-align: center; width: 100%; font-weight: bold; color: white;"
                 )
 
-    def update_images(result: dict[str, str]) -> None:
-        result_image.set_source(f"data:image/jpeg;base64,{result['result']}")
-        original_image.set_source(f"data:image/jpeg;base64,{result['original']}")
-        preprocessed_image.set_source(
-            f"data:image/jpeg;base64,{result['preprocessed']}"
-        )
-        reconstructed_image.set_source(
-            f"data:image/jpeg;base64,{result['reconstructed']}"
-        )
-        residuals_image.set_source(f"data:image/jpeg;base64,{result['residuals']}")
-        mini_residuals_image.set_source(f"data:image/jpeg;base64,{result['residuals']}")
-        result_mini_image.set_source(f"data:image/jpeg;base64,{result['result']}")
+    def update_images(result: dict[str, str] | str) -> None:
+        def get(key: str) -> str:
+            return result if isinstance(result, str) else result[key]
+
+        result_image.set_source(f"data:image/jpeg;base64,{get('superimposed')}")
+        original_image.set_source(f"data:image/jpeg;base64,{get('original')}")
+        preprocessed_image.set_source(f"data:image/jpeg;base64,{get('preprocessed')}")
+        reconstructed_image.set_source(f"data:image/jpeg;base64,{get('reconstructed')}")
+        residuals_image.set_source(f"data:image/jpeg;base64,{get('residuals')}")
+        mini_residuals_image.set_source(f"data:image/jpeg;base64,{get('residuals')}")
+        result_mini_image.set_source(f"data:image/jpeg;base64,{get('superimposed')}")
 
     app_controller.set_update_ui_callback(update_images)
 

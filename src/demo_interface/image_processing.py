@@ -14,11 +14,11 @@ type Image = npt.NDArray[np.uint8]
 
 @dataclass
 class AnomalyResult:
-    result: bytes | None
     original: bytes
     preprocessed: bytes
     reconstructed: bytes
     residuals: bytes
+    superimposed: bytes
 
 
 class AbstractImageProcessor(ABC):
