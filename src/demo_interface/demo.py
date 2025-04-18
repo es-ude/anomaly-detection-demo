@@ -3,14 +3,13 @@ from pathlib import Path
 
 from nicegui import app, ui
 
-from api import FrameData, start_frame_updates
 from camera import Camera
+from src.demo_interface.demo_application_controller import DemoApplicationController
 from src.demo_interface.image_processing import (
     AnomalyDetectorProcessor,
     BasicProcessor,
     CalibrationProcessor,
 )
-from utils import load_image_as_bytes
 
 BASE_PATH = Path(__file__).parent
 ZAKID_LOGO = BASE_PATH / "assets" / "zakid_logo_weiß.svg"
@@ -25,6 +24,14 @@ WIDTH_SMALL_IMAGE_CONTAINER = 200
 SMALL_IMAGE_LENGTH = 175
 
 
+def _load_image(image_path: Path) -> bytes:
+    with open(image_path, "rb") as file:
+        return file.read()
+
+
+app_controller = DemoApplicationController(
+    camera=Camera(cam_port=0), placeholder_image=_load_image(PLACEHOLDER_IMAGE)
+)
 basic_processor = BasicProcessor(target_image_size=(800, 800))
 calibration_processor = CalibrationProcessor(target_image_size=(800, 800))
 anomaly_detector_processor = AnomalyDetectorProcessor(
@@ -33,10 +40,9 @@ anomaly_detector_processor = AnomalyDetectorProcessor(
     model_file=Path(__file__).parents[2]
     / "src/anomaly_detection/model_checkpoints/cookie/model.pt",
 )
-frame_data = FrameData(processor=anomaly_detector_processor)
 
 
-def header() -> None:
+def _header() -> None:
     """
     Header with logos und title. To use in every subpage. Also adds background color.
     """
@@ -65,8 +71,8 @@ def basic_page() -> None:
     """
     Basic image processing page. Image from the camera is just returned and displayed.
     """
-    frame_data.processor = basic_processor
-    header()
+    app_controller.set_image_processor(basic_processor)
+    _header()
 
     result_image = (
         ui.interactive_image()
@@ -74,10 +80,10 @@ def basic_page() -> None:
         .style("object-fit: contain")
     )
 
-    def update_images(result):
-        result_image.set_source(f"data:image/jpeg;base64,{result['result']}")
+    def update_images(result: str) -> None:
+        result_image.set_source(f"data:image/jpeg;base64,{result}")
 
-    frame_data.set_callback(update_images)
+    app_controller.set_update_ui_callback(update_images)
 
 
 @ui.page("/calibration")
@@ -85,8 +91,9 @@ def calibration_page() -> None:
     """
     Calibration image processing page. Image from the camera is returned with a red circle, which the .
     """
-    frame_data.processor = calibration_processor
-    header()
+    app_controller.set_image_processor(calibration_processor)
+    _header()
+
     with ui.column().classes("w-full items-center mt-10"):
         result_image = (
             ui.interactive_image()
@@ -94,10 +101,10 @@ def calibration_page() -> None:
             .style("object-fit: contain")
         )
 
-    def update_images(result):
-        result_image.set_source(f"data:image/jpeg;base64,{result['result']}")
+    def update_images(result: str) -> None:
+        result_image.set_source(f"data:image/jpeg;base64,{result}")
 
-    frame_data.set_callback(update_images)
+    app_controller.set_update_ui_callback(update_images)
 
 
 @ui.page("/anomaly-detection")
@@ -105,8 +112,8 @@ def anomaly_detection_page() -> None:
     """
     Anomaly Detection page. Detected anomalies and intermediate image processing steps are displayed.
     """
-    frame_data.processor = anomaly_detector_processor
-    header()
+    app_controller.set_image_processor(anomaly_detector_processor)
+    _header()
 
     with ui.column().classes("w-full items-center mt-1"):
         with ui.row().classes("w-full justify-center gap-20"):
@@ -212,7 +219,7 @@ def anomaly_detection_page() -> None:
                     "text-align: center; width: 100%; font-weight: bold; color: white;"
                 )
 
-    def update_images(result):
+    def update_images(result: dict[str, str]) -> None:
         result_image.set_source(f"data:image/jpeg;base64,{result['result']}")
         original_image.set_source(f"data:image/jpeg;base64,{result['original']}")
         preprocessed_image.set_source(
@@ -225,18 +232,12 @@ def anomaly_detection_page() -> None:
         mini_residuals_image.set_source(f"data:image/jpeg;base64,{result['residuals']}")
         result_mini_image.set_source(f"data:image/jpeg;base64,{result['result']}")
 
-    frame_data.set_callback(update_images)
+    app_controller.set_update_ui_callback(update_images)
 
 
 @app.on_startup
 def startup():
-    asyncio.create_task(
-        start_frame_updates(
-            frame_data=frame_data,
-            camera=Camera(cam_port=0),
-            placeholder_bytes=load_image_as_bytes(PLACEHOLDER_IMAGE),
-        )
-    )
+    asyncio.create_task(app_controller.run())
 
 
 ui.run(reload=True)

@@ -13,10 +13,15 @@ class Camera:
         return self.capture.isOpened()
 
     def read_frame(self) -> npt.NDArray[np.uint8] | None:
-        ret, frame = self.capture.read()
-        if ret:
-            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        return frame if ret else None
+        if not self.is_opened():
+            return None
+
+        success, frame = self.capture.read()
+
+        if not success:
+            return None
+
+        return cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
     def release(self) -> None:
         self.capture.release()
