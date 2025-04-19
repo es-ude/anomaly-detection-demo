@@ -3,7 +3,6 @@ from pathlib import Path
 
 from nicegui import app, ui
 
-from camera import Camera
 from src.demo_interface.demo_application_controller import DemoApplicationController
 from src.demo_interface.image_processing import (
     AnomalyDetectorProcessor,
@@ -29,9 +28,8 @@ def _load_image(image_path: Path) -> bytes:
         return file.read()
 
 
-camera = Camera(cam_port=0)
 app_controller = DemoApplicationController(
-    camera=camera, placeholder_image=_load_image(PLACEHOLDER_IMAGE)
+    cam_port=0, placeholder_image=_load_image(PLACEHOLDER_IMAGE)
 )
 basic_processor = BasicProcessor(target_image_size=(800, 800))
 calibration_processor = CalibrationProcessor(target_image_size=(800, 800))
@@ -236,6 +234,6 @@ def anomaly_detection_page() -> None:
 
 
 app.on_startup(lambda: asyncio.create_task(app_controller.run()))
-app.on_shutdown(lambda: camera.release())
+app.on_shutdown(app_controller.close)
 
 ui.run(reload=True)

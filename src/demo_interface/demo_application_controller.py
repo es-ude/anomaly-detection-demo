@@ -16,8 +16,8 @@ class _NoneImageProcessor:
 
 
 class DemoApplicationController:
-    def __init__(self, camera: Camera, placeholder_image: bytes) -> None:
-        self._camera = camera
+    def __init__(self, cam_port: int | str, placeholder_image: bytes) -> None:
+        self._camera = Camera(cam_port, width=1920, height=1080)
         self._placeholder_image = placeholder_image
         self._image_processor: ImageProcessor = _NoneImageProcessor()
         self._update_ui_callback: UpdateUICallback = lambda _: None
@@ -34,10 +34,12 @@ class DemoApplicationController:
     def set_image_processor(self, image_processor: ImageProcessor) -> None:
         self._image_processor = image_processor
 
+    def close(self) -> None:
+        self._camera.release()
+
     async def _take_and_process_frame(self) -> AnomalyResult | bytes | None:
         frame = await run.io_bound(self._camera.read_frame)
-        frame = await run.cpu_bound(self._image_processor.process, frame)
-        return frame
+        return await run.cpu_bound(self._image_processor.process, frame)
 
     def _frame_to_ui_data(
         self, frame: AnomalyResult | bytes | None
