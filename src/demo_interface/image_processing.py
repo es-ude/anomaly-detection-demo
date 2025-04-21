@@ -1,5 +1,4 @@
 from abc import ABC, abstractmethod
-from dataclasses import dataclass, fields
 from pathlib import Path
 from typing import Protocol
 
@@ -13,54 +12,52 @@ from src.anomaly_detection.anomaly_detector import AnomalyDetector, DetectionRes
 type Image = npt.NDArray[np.uint8]
 
 
-@dataclass
-class AnomalyResult:
-    original: bytes
-    preprocessed: bytes
-    reconstructed: bytes
-    residuals: bytes
-    superimposed: bytes
-
-
 class ImageProcessor(Protocol):
-    def process(self, image: Image) -> AnomalyResult | bytes | None: ...
+    def process(self, image: Image) -> DetectionResult | Image | None: ...
 
 
-class _CenterCropImageProcessor(ABC):
-    def __init__(self, target_image_size: tuple[int, int]) -> None:
+class _BaseImageProcessor(ABC):
+    def __init__(
+        self,
+        target_image_size: tuple[int, int],
+        flip_horizontal: bool = True,
+        flip_vertical: bool = True,
+    ) -> None:
         self.target_image_size = target_image_size
+        self.flip_horizontal = flip_horizontal
+        self.flip_vertical = flip_vertical
 
     @abstractmethod
-    def _process(self, image: Image) -> AnomalyResult | bytes:
+    def _process(self, image: Image) -> DetectionResult | Image:
         pass
 
-    def process(self, image: Image) -> AnomalyResult | bytes | None:
+    def process(self, image: Image) -> DetectionResult | Image | None:
         if image is None:
             return None
         cropped_image = _center_crop(image, self.target_image_size)
-        return self._process(cropped_image)
+        flipped_image = _flip(cropped_image, self.flip_horizontal, self.flip_vertical)
+        return self._process(flipped_image)
 
 
-class BasicProcessor(_CenterCropImageProcessor):
-    def _process(self, image: Image) -> bytes:
-        return _rgb_image_to_bytes(image)
+class BasicProcessor(_BaseImageProcessor):
+    def _process(self, image: Image) -> Image:
+        return image
 
 
-class CalibrationProcessor(_CenterCropImageProcessor):
-    def _process(self, image: Image) -> bytes:
-        image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
+class CalibrationProcessor(_BaseImageProcessor):
+    def _process(self, image: Image) -> Image:
         height, width, _ = image.shape
-        processed_frame = cv2.circle(
-            image.copy(),
+        image_with_circle = cv2.circle(
+            img=cv2.cvtColor(image, cv2.COLOR_RGB2BGR),
             center=(height // 2, width // 2),
             radius=175,
             color=(0, 0, 255),
             thickness=5,
         )
-        return _bgr_image_to_bytes(processed_frame)
+        return cv2.cvtColor(image_with_circle, cv2.COLOR_BGR2RGB)
 
 
-class AnomalyDetectorProcessor(_CenterCropImageProcessor):
+class AnomalyDetectorProcessor(_BaseImageProcessor):
     def __init__(
         self,
         model_file: Path,
@@ -76,16 +73,7 @@ class AnomalyDetectorProcessor(_CenterCropImageProcessor):
         )
         self.anomaly_detector.load_model()
 
-    def _process(self, image: Image) -> AnomalyResult:
-        image = _flip(image, horizontal=True, vertical=True)
-        result = self._detect_anomaly(image)
-        images = {
-            field.name: _rgb_image_to_bytes(getattr(result, field.name))
-            for field in fields(result)  # type: ignore
-        }
-        return AnomalyResult(**images)
-
-    def _detect_anomaly(self, image: Image) -> DetectionResult:
+    def _process(self, image: Image) -> DetectionResult:
         return self.anomaly_detector.detect(image)
 
 
@@ -103,18 +91,6 @@ def _center_crop(image: Image, image_size: tuple[int, int]) -> Image:
     cropped_frame = image[y_min:y_max, x_min:x_max]
 
     return cropped_frame
-
-
-def _bgr_image_to_bytes(frame: Image) -> bytes:
-    success, buffer = cv2.imencode(".jpg", frame)
-    if not success:
-        raise RuntimeError("Failed to convert image to bytes.")
-    return buffer.tobytes()
-
-
-def _rgb_image_to_bytes(image: Image) -> bytes:
-    image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
-    return _bgr_image_to_bytes(image)
 
 
 def _flip(image: Image, horizontal: bool = False, vertical: bool = False) -> Image:

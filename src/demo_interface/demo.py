@@ -23,13 +23,8 @@ WIDTH_SMALL_IMAGE_CONTAINER = 200
 SMALL_IMAGE_LENGTH = 175
 
 
-def _load_image(image_path: Path) -> bytes:
-    with open(image_path, "rb") as file:
-        return file.read()
-
-
 app_controller = DemoApplicationController(
-    cam_port=0, placeholder_image=_load_image(PLACEHOLDER_IMAGE)
+    cam_port=0, placeholder_image_file=PLACEHOLDER_IMAGE
 )
 basic_processor = BasicProcessor(target_image_size=(800, 800))
 calibration_processor = CalibrationProcessor(target_image_size=(800, 800))
@@ -80,7 +75,7 @@ def basic_page() -> None:
     )
 
     def update_images(result: str) -> None:
-        result_image.set_source(f"data:image/jpeg;base64,{result}")
+        result_image.set_source(result)
 
     app_controller.set_update_ui_callback(update_images)
 
@@ -101,7 +96,7 @@ def calibration_page() -> None:
         )
 
     def update_images(result: str) -> None:
-        result_image.set_source(f"data:image/jpeg;base64,{result}")
+        result_image.set_source(result)
 
     app_controller.set_update_ui_callback(update_images)
 
@@ -219,16 +214,16 @@ def anomaly_detection_page() -> None:
                 )
 
     def update_images(result: dict[str, str] | str) -> None:
-        def get(key: str) -> str:
+        def get_image(key: str) -> str:
             return result if isinstance(result, str) else result[key]
 
-        result_image.set_source(f"data:image/jpeg;base64,{get('superimposed')}")
-        original_image.set_source(f"data:image/jpeg;base64,{get('original')}")
-        preprocessed_image.set_source(f"data:image/jpeg;base64,{get('preprocessed')}")
-        reconstructed_image.set_source(f"data:image/jpeg;base64,{get('reconstructed')}")
-        residuals_image.set_source(f"data:image/jpeg;base64,{get('residuals')}")
-        mini_residuals_image.set_source(f"data:image/jpeg;base64,{get('residuals')}")
-        result_mini_image.set_source(f"data:image/jpeg;base64,{get('superimposed')}")
+        result_image.set_source(get_image("superimposed"))
+        original_image.set_source(get_image("original"))
+        preprocessed_image.set_source(get_image("preprocessed"))
+        reconstructed_image.set_source(get_image("reconstructed"))
+        residuals_image.set_source(get_image("residuals"))
+        mini_residuals_image.set_source(get_image("residuals"))
+        result_mini_image.set_source(get_image("superimposed"))
 
     app_controller.set_update_ui_callback(update_images)
 
