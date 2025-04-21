@@ -66,7 +66,7 @@ class AnomalyDetector:
 
         image = image.to(self.device)
         with torch.no_grad():
-            result = self._model(image)
+            result = self._model(image).clamp(min=0, max=1)
         return result.cpu()
 
     def _resize_residuals(self, residuals: torch.Tensor) -> torch.Tensor:
