@@ -3,17 +3,14 @@ from pathlib import Path
 from typing import Protocol
 
 import cv2
-import numpy as np
-import numpy.typing as npt
 import torch
 
 from src.anomaly_detection.anomaly_detector import AnomalyDetector, DetectionResult
-
-type Image = npt.NDArray[np.uint8]
+from src.demo_interface.image import Image, convert_bgr_to_rgb, convert_rgb_to_bgr
 
 
 class ImageProcessor(Protocol):
-    def process(self, image: Image) -> DetectionResult | Image | None: ...
+    def process(self, image: Image | None) -> DetectionResult | Image | None: ...
 
 
 class _BaseImageProcessor(ABC):
@@ -31,7 +28,7 @@ class _BaseImageProcessor(ABC):
     def _process(self, image: Image) -> DetectionResult | Image:
         pass
 
-    def process(self, image: Image) -> DetectionResult | Image | None:
+    def process(self, image: Image | None) -> DetectionResult | Image | None:
         if image is None:
             return None
         cropped_image = _center_crop(image, self.target_image_size)
@@ -48,13 +45,13 @@ class CalibrationProcessor(_BaseImageProcessor):
     def _process(self, image: Image) -> Image:
         height, width, _ = image.shape
         image_with_circle = cv2.circle(
-            img=cv2.cvtColor(image, cv2.COLOR_RGB2BGR),
+            img=convert_rgb_to_bgr(image),
             center=(height // 2, width // 2),
             radius=175,
             color=(0, 0, 255),
             thickness=5,
         )
-        return cv2.cvtColor(image_with_circle, cv2.COLOR_BGR2RGB)
+        return convert_bgr_to_rgb(image_with_circle)
 
 
 class AnomalyDetectorProcessor(_BaseImageProcessor):

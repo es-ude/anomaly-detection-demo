@@ -8,13 +8,14 @@ from nicegui import run
 
 from src.anomaly_detection.anomaly_detector import DetectionResult
 from src.demo_interface.camera import Camera
-from src.demo_interface.image_processing import Image, ImageProcessor
+from src.demo_interface.image import Image, convert_rgb_to_bgr
+from src.demo_interface.image_processing import ImageProcessor
 
-type UpdateUICallback = Callable[[dict[str, str] | str], None]
+type UpdateUICallback = Callable[[dict[str, str]], None] | Callable[[str], None]
 
 
 class _NoneImageProcessor:
-    def process(self, image: Image) -> None:
+    def process(self, image: Image | None) -> None:
         return None
 
 
@@ -29,7 +30,7 @@ class DemoApplicationController:
         while True:
             processed_frame = await self._take_and_process_frame()
             ui_data = self._frame_to_ui_data(processed_frame)
-            self._update_ui_callback(ui_data)
+            self._update_ui_callback(ui_data)  # type: ignore
 
     def set_update_ui_callback(self, callback: UpdateUICallback) -> None:
         self._update_ui_callback = callback
@@ -62,7 +63,7 @@ def _load_image(image_file: Path) -> Image:
 
 
 def _image_to_string(image: Image) -> str:
-    image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
+    image = convert_rgb_to_bgr(image)
     success, buffer = cv2.imencode(".jpg", image)
     if not success:
         raise RuntimeError("Failed to convert image to bytes.")

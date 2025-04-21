@@ -1,6 +1,6 @@
 import cv2
-import numpy as np
-import numpy.typing as npt
+
+from src.demo_interface.image import Image, convert_bgr_to_rgb
 
 
 class Camera:
@@ -12,7 +12,7 @@ class Camera:
     def is_opened(self) -> bool:
         return self.capture.isOpened()
 
-    def read_frame(self) -> npt.NDArray[np.uint8] | None:
+    def read_frame(self) -> Image | None:
         if not self.is_opened():
             return None
 
@@ -21,7 +21,7 @@ class Camera:
         if not success:
             return None
 
-        return cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        return convert_bgr_to_rgb(frame)
 
     def release(self) -> None:
         self.capture.release()

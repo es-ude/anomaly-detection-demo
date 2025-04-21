@@ -3,7 +3,6 @@ from pathlib import Path
 
 import cv2
 import numpy as np
-import numpy.typing as npt
 import torch
 import torchvision.transforms.v2.functional as tv_func
 
@@ -11,7 +10,7 @@ from src.anomaly_detection.model import Autoencoder
 from src.anomaly_detection.persistence import load_model
 from src.anomaly_detection.preprocessing import InferencePreprocessing
 
-type Image = npt.NDArray[np.uint8]
+type Image = cv2.typing.MatLike
 
 
 @dataclass
@@ -62,6 +61,9 @@ class AnomalyDetector:
         )
 
     def _perform_inference(self, image: torch.Tensor) -> torch.Tensor:
+        if self._model is None:
+            raise RuntimeError("Model not loaded. Call load_model() first.")
+
         image = image.to(self.device)
         with torch.no_grad():
             result = self._model(image)
