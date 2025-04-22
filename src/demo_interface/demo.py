@@ -1,11 +1,9 @@
-import time
+import asyncio
 from pathlib import Path
 
-import httpx
 from nicegui import app, ui
 
-from src.demo_interface.api import setup_api
-from src.demo_interface.camera import Camera
+from src.demo_interface.demo_application_controller import DemoApplicationController
 from src.demo_interface.image_processing import (
     AnomalyDetectorProcessor,
     BasicProcessor,
@@ -18,233 +16,226 @@ UDE_LOGO = BASE_PATH / "assets" / "logo_ude_weiß_transparent.svg"
 PLACEHOLDER_IMAGE = BASE_PATH / "assets" / "placeholder_2.png"
 ENCODER_VISUALIZATION = BASE_PATH / "assets" / "darstellung_encoder_decoder_weiß.png"
 
-camera_instance = Camera()
-basic_processor = BasicProcessor()
-calibration_processor = CalibrationProcessor()
-anomaly_detector_processor = AnomalyDetectorProcessor()
-
-height_big_image = 750
-width_big_image = 750
-height_small_image_container = 200
-width_small_image_container = 200
-small_image_length = 175
+HEIGHT_BIG_IMAGE = 750
+WIDTH_BIG_IMAGE = 750
+HEIGHT_SMALL_IMAGE_CONTAINER = 200
+WIDTH_SMALL_IMAGE_CONTAINER = 200
+SMALL_IMAGE_LENGTH = 175
 
 
-def header() -> None:
-    """
-    Header with logos und title. To use in every subpage. Also adds background color.
-    """
-    ui.add_head_html("<style>body {background-color: #222; }</style>")
-    with ui.row().classes("w-full items-start"):
-        ui.image(ZAKID_LOGO).props("width=200px height=50px fit=scale-down")
-        ui.label("KI-basierte Defektkontrolle").classes(
-            "flex-grow text-center self-end text-4xl font-bold"
-        ).style("color: white;")
-
-        ui.image(UDE_LOGO).props("width=200px height=50px fit=scale-down")
-
-    ui.separator()
-
-
-@ui.page("/")
-def index_page() -> None:
-    """
-    Standard root page. Automatically redirects to the anomaly detection page.
-    """
-    ui.run_javascript("window.location='/anomaly-detection'")
-
-
-@ui.page("/basic")
-def basis_page() -> None:
-    """
-    Basic image processing page. Image from the camera is just returned and displayed.
-    """
-    header()
-
-    result_image = (
-        ui.interactive_image()
-        .classes(f"w-[{width_big_image}]px] h-[{height_big_image}px]")
-        .style("object-fit: contain")
+def setup() -> None:
+    app_controller = DemoApplicationController(
+        cam_port=0, placeholder_image_file=PLACEHOLDER_IMAGE
+    )
+    basic_processor = BasicProcessor(target_image_size=(800, 800))
+    calibration_processor = CalibrationProcessor(target_image_size=(800, 800))
+    anomaly_detector_processor = AnomalyDetectorProcessor(
+        target_image_size=(800, 800),
+        inference_image_size=(128, 128),
+        model_file=Path(__file__).parents[2]
+        / "src/anomaly_detection/model_checkpoints/cookie/model.pt",
     )
 
-    async def update_images():
-        url = f"http://localhost:8080/video/frame/basic?ts={time.time()}"
-        async with httpx.AsyncClient() as client:
-            response = await client.get(url)
-        data = response.json()
-        result_image.set_source(f"data:image/jpeg;base64,{data['result']}")
+    def _header() -> None:
+        """
+        Header with logos und title. To use in every subpage. Also adds background color.
+        """
+        ui.add_head_html("<style>body {background-color: #222; }</style>")
+        with ui.row().classes("w-full items-start"):
+            ui.image(ZAKID_LOGO).props("width=200px height=50px fit=scale-down")
+            ui.label("KI-basierte Defektkontrolle").classes(
+                "flex-grow text-center self-end text-4xl font-bold"
+            ).style("color: white;")
 
-    ui.timer(interval=0.1, callback=update_images)
+            ui.image(UDE_LOGO).props("width=200px height=50px fit=scale-down")
 
+        ui.separator()
 
-@ui.page("/calibration")
-def calibration_page() -> None:
-    """
-    Calibration image processing page. Image from the camera is returned with a red circle, which the .
-    """
-    header()
-    with ui.column().classes("w-full items-center mt-10"):
+    @ui.page("/")
+    def index_page() -> None:
+        """
+        Standard root page. Automatically redirects to the anomaly detection page.
+        """
+        ui.run_javascript("window.location='/anomaly-detection'")
+
+    @ui.page("/basic")
+    def basic_page() -> None:
+        """
+        Basic image processing page. Image from the camera is just returned and displayed.
+        """
+        app_controller.set_image_processor(basic_processor)
+        _header()
+
         result_image = (
             ui.interactive_image()
-            .classes(f"w-[{width_big_image}]px] h-[{height_big_image}px]")
+            .classes(f"w-[{WIDTH_BIG_IMAGE}]px] h-[{HEIGHT_BIG_IMAGE}px]")
             .style("object-fit: contain")
         )
 
-    async def update_images():
-        url = f"http://localhost:8080/video/frame/calibration?ts={time.time()}"
-        async with httpx.AsyncClient() as client:
-            response = await client.get(url)
-        data = response.json()
-        result_image.set_source(f"data:image/jpeg;base64,{data['result']}")
+        def update_images(result: str) -> None:
+            result_image.set_source(result)
 
-    ui.timer(interval=0.1, callback=update_images)
+        app_controller.set_update_ui_callback(update_images)
 
+    @ui.page("/calibration")
+    def calibration_page() -> None:
+        """
+        Calibration image processing page. Image from the camera is returned with a red circle, which the .
+        """
+        app_controller.set_image_processor(calibration_processor)
+        _header()
 
-@ui.page("/anomaly-detection")
-def anomaly_detection_page() -> None:
-    """
-    Anomaly Detection page. Detected anomalies and intermediate image processing steps are displayed.
-    """
-    header()
-
-    with ui.column().classes("w-full items-center mt-1"):
-        with ui.row().classes("w-full justify-center gap-20"):
-            residuals_image = (
-                ui.interactive_image()
-                .classes(f"w-[{width_big_image}]px] h-[{height_big_image}px]")
-                .style("object-fit: contain")
-            )
+        with ui.column().classes("w-full items-center mt-10"):
             result_image = (
                 ui.interactive_image()
-                .classes(f"w-[{width_big_image}]px] h-[{height_big_image}px]")
+                .classes(f"w-[{WIDTH_BIG_IMAGE}]px] h-[{HEIGHT_BIG_IMAGE}px]")
                 .style("object-fit: contain")
             )
 
-        with ui.row().classes("w-full items-center justify-center gap-6 mt-1"):
-            with ui.column().classes(
-                f"w-[{width_small_image_container}px] h-[{height_small_image_container}px] items-center justify-center"
-            ):
-                original_image = (
+        def update_images(result: str) -> None:
+            result_image.set_source(result)
+
+        app_controller.set_update_ui_callback(update_images)
+
+    @ui.page("/anomaly-detection")
+    def anomaly_detection_page() -> None:
+        """
+        Anomaly Detection page. Detected anomalies and intermediate image processing steps are displayed.
+        """
+        app_controller.set_image_processor(anomaly_detector_processor)
+        _header()
+
+        with ui.column().classes("w-full items-center mt-1"):
+            with ui.row().classes("w-full justify-center gap-20"):
+                residuals_image = (
                     ui.interactive_image()
-                    .classes(f"w-[{small_image_length}px] h-[{small_image_length}px]")
+                    .classes(f"w-[{WIDTH_BIG_IMAGE}]px] h-[{HEIGHT_BIG_IMAGE}px]")
                     .style("object-fit: contain")
                 )
-                ui.label("Original").style(
-                    "text-align: center; width: 100%; font-weight: bold; color: white;"
-                )
-
-            ui.icon("arrow_right").classes("text-4xl font-bold my-auto").style(
-                "color: white; margin-top: 65px;"
-            )
-
-            with ui.column().classes(
-                f"w-[{width_small_image_container}px] h-[{height_small_image_container}px] items-center justify-center"
-            ):
-                preprocessed_image = (
+                result_image = (
                     ui.interactive_image()
-                    .classes(f"w-[{small_image_length}px] h-[{small_image_length}px]")
+                    .classes(f"w-[{WIDTH_BIG_IMAGE}]px] h-[{HEIGHT_BIG_IMAGE}px]")
                     .style("object-fit: contain")
                 )
-                ui.label("Vorverarbeitet").style(
-                    "text-align: center; width: 100%; font-weight: bold; color: white;"
+
+            with ui.row().classes("w-full items-center justify-center gap-6 mt-1"):
+                with ui.column().classes(
+                    f"w-[{WIDTH_SMALL_IMAGE_CONTAINER}px] h-[{HEIGHT_SMALL_IMAGE_CONTAINER}px] items-center justify-center"
+                ):
+                    original_image = (
+                        ui.interactive_image()
+                        .classes(
+                            f"w-[{SMALL_IMAGE_LENGTH}px] h-[{SMALL_IMAGE_LENGTH}px]"
+                        )
+                        .style("object-fit: contain")
+                    )
+                    ui.label("Original").style(
+                        "text-align: center; width: 100%; font-weight: bold; color: white;"
+                    )
+
+                ui.icon("arrow_right").classes("text-4xl font-bold my-auto").style(
+                    "color: white; margin-top: 65px;"
                 )
 
-            ui.icon("arrow_right").classes("text-4xl font-bold my-auto").style(
-                "color: white; margin-top: 65px;"
-            )
+                with ui.column().classes(
+                    f"w-[{WIDTH_SMALL_IMAGE_CONTAINER}px] h-[{HEIGHT_SMALL_IMAGE_CONTAINER}px] items-center justify-center"
+                ):
+                    preprocessed_image = (
+                        ui.interactive_image()
+                        .classes(
+                            f"w-[{SMALL_IMAGE_LENGTH}px] h-[{SMALL_IMAGE_LENGTH}px]"
+                        )
+                        .style("object-fit: contain")
+                    )
+                    ui.label("Vorverarbeitet").style(
+                        "text-align: center; width: 100%; font-weight: bold; color: white;"
+                    )
 
-            with ui.column().classes(
-                f"w-[{width_small_image_container}px] h-[{height_small_image_container}px] items-center justify-center"
-            ):
-                ui.image(str(ENCODER_VISUALIZATION)).classes(
-                    f"w-[{small_image_length}px] h-[{small_image_length}px]"
-                ).props("fit=scale-down")
-                ui.label("Convolutional Autoencoder").style(
-                    "text-align: center; width: 100%; font-weight: bold; color: white;"
+                ui.icon("arrow_right").classes("text-4xl font-bold my-auto").style(
+                    "color: white; margin-top: 65px;"
                 )
 
-            ui.icon("arrow_right").classes("text-4xl font-bold my-auto").style(
-                "color: white; margin-top: 65px;"
-            )
+                with ui.column().classes(
+                    f"w-[{WIDTH_SMALL_IMAGE_CONTAINER}px] h-[{HEIGHT_SMALL_IMAGE_CONTAINER}px] items-center justify-center"
+                ):
+                    ui.image(str(ENCODER_VISUALIZATION)).classes(
+                        f"w-[{SMALL_IMAGE_LENGTH}px] h-[{SMALL_IMAGE_LENGTH}px]"
+                    ).props("fit=scale-down")
+                    ui.label("Convolutional Autoencoder").style(
+                        "text-align: center; width: 100%; font-weight: bold; color: white;"
+                    )
 
-            with ui.column().classes(
-                f"w-[{width_small_image_container}px] h-[{height_small_image_container}px] items-center justify-center"
-            ):
-                reconstructed_image = (
-                    ui.interactive_image()
-                    .classes(f"w-[{small_image_length}px] h-[{small_image_length}px]")
-                    .style("object-fit: contain")
-                )
-                ui.label("Rekonstruiert").style(
-                    "text-align: center; width: 100%; font-weight: bold; color: white;"
+                ui.icon("arrow_right").classes("text-4xl font-bold my-auto").style(
+                    "color: white; margin-top: 65px;"
                 )
 
-            ui.icon("arrow_right").classes("text-4xl font-bold my-auto").style(
-                "color: white; margin-top: 65px;"
-            )
+                with ui.column().classes(
+                    f"w-[{WIDTH_SMALL_IMAGE_CONTAINER}px] h-[{HEIGHT_SMALL_IMAGE_CONTAINER}px] items-center justify-center"
+                ):
+                    reconstructed_image = (
+                        ui.interactive_image()
+                        .classes(
+                            f"w-[{SMALL_IMAGE_LENGTH}px] h-[{SMALL_IMAGE_LENGTH}px]"
+                        )
+                        .style("object-fit: contain")
+                    )
+                    ui.label("Rekonstruiert").style(
+                        "text-align: center; width: 100%; font-weight: bold; color: white;"
+                    )
 
-            with ui.column().classes(
-                f"w-[{width_small_image_container}px] h-[{height_small_image_container}px] items-center justify-center"
-            ):
-                mini_residuals_image = (
-                    ui.interactive_image()
-                    .classes(f"w-[{small_image_length}px] h-[{small_image_length}px]")
-                    .style("object-fit: contain")
-                )
-                ui.label("|Vorverarbeitet - Rekonstruiert|").style(
-                    "text-align: center; width: 100%; font-weight: bold; color: white;"
-                )
-
-            ui.icon("arrow_right").classes("text-4xl font-bold my-auto").style(
-                "color: white; margin-top: 65px;"
-            )
-
-            with ui.column().classes(
-                f"w-[{width_small_image_container}px] h-[{height_small_image_container}px] items-center justify-center"
-            ):
-                result_mini_image = (
-                    ui.interactive_image()
-                    .classes(f"w-[{small_image_length}px] h-[{small_image_length}px]")
-                    .style("object-fit: contain")
-                )
-                ui.label("Ergebnis mit Anomalien").style(
-                    "text-align: center; width: 100%; font-weight: bold; color: white;"
+                ui.icon("arrow_right").classes("text-4xl font-bold my-auto").style(
+                    "color: white; margin-top: 65px;"
                 )
 
-        async def update_images():
-            now = time.time()
-            url = f"http://localhost:8080/video/frame/anomaly-detection?ts={now}"
-            async with httpx.AsyncClient() as client:
-                response = await client.get(url)
+                with ui.column().classes(
+                    f"w-[{WIDTH_SMALL_IMAGE_CONTAINER}px] h-[{HEIGHT_SMALL_IMAGE_CONTAINER}px] items-center justify-center"
+                ):
+                    mini_residuals_image = (
+                        ui.interactive_image()
+                        .classes(
+                            f"w-[{SMALL_IMAGE_LENGTH}px] h-[{SMALL_IMAGE_LENGTH}px]"
+                        )
+                        .style("object-fit: contain")
+                    )
+                    ui.label("|Vorverarbeitet - Rekonstruiert|").style(
+                        "text-align: center; width: 100%; font-weight: bold; color: white;"
+                    )
 
-            data = response.json()
-            result_image.set_source(f"data:image/jpeg;base64,{data['result']}")
-            original_image.set_source(f"data:image/jpeg;base64,{data['original']}")
-            preprocessed_image.set_source(
-                f"data:image/jpeg;base64,{data['preprocessed']}"
-            )
-            reconstructed_image.set_source(
-                f"data:image/jpeg;base64,{data['reconstructed']}"
-            )
-            residuals_image.set_source(f"data:image/jpeg;base64,{data['residuals']}")
-            mini_residuals_image.set_source(
-                f"data:image/jpeg;base64,{data['residuals']}"
-            )
-            result_mini_image.set_source(f"data:image/jpeg;base64,{data['result']}")
+                ui.icon("arrow_right").classes("text-4xl font-bold my-auto").style(
+                    "color: white; margin-top: 65px;"
+                )
 
-        ui.timer(interval=0.1, callback=update_images)
+                with ui.column().classes(
+                    f"w-[{WIDTH_SMALL_IMAGE_CONTAINER}px] h-[{HEIGHT_SMALL_IMAGE_CONTAINER}px] items-center justify-center"
+                ):
+                    result_mini_image = (
+                        ui.interactive_image()
+                        .classes(
+                            f"w-[{SMALL_IMAGE_LENGTH}px] h-[{SMALL_IMAGE_LENGTH}px]"
+                        )
+                        .style("object-fit: contain")
+                    )
+                    ui.label("Ergebnis mit Anomalien").style(
+                        "text-align: center; width: 100%; font-weight: bold; color: white;"
+                    )
+
+        def update_images(result: dict[str, str] | str) -> None:
+            def get_image(key: str) -> str:
+                return result if isinstance(result, str) else result[key]
+
+            result_image.set_source(get_image("superimposed"))
+            original_image.set_source(get_image("original"))
+            preprocessed_image.set_source(get_image("preprocessed"))
+            reconstructed_image.set_source(get_image("reconstructed"))
+            residuals_image.set_source(get_image("residuals"))
+            mini_residuals_image.set_source(get_image("residuals"))
+            result_mini_image.set_source(get_image("superimposed"))
+
+        app_controller.set_update_ui_callback(update_images)
+
+    asyncio.create_task(app_controller.run())
+    app.on_shutdown(app_controller.close)
 
 
-def on_startup():
-    setup_api(
-        camera=camera_instance,
-        basic_processor=basic_processor,
-        calibration_processor=calibration_processor,
-        anomaly_detector_processor=anomaly_detector_processor,
-        placeholder_image=PLACEHOLDER_IMAGE,
-    )
-    time.sleep(2)
-
-
-app.on_startup(on_startup)
+app.on_startup(setup)
 ui.run()

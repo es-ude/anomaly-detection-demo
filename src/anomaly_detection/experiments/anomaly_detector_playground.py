@@ -25,8 +25,8 @@ def main() -> None:
 
     anomaly_detector = AnomalyDetector(
         model_file=CKPT_DIR / MODEL_FILE_NAME,
-        input_img_size=(800, 800),
-        inference_img_size=(IMAGE_WIDTH, IMAGE_HEIGHT),
+        input_image_size=(800, 800),
+        inference_image_size=(IMAGE_WIDTH, IMAGE_HEIGHT),
         device=DEVICE,
     )
     anomaly_detector.load_model()
@@ -52,7 +52,7 @@ def _plot(result: DetectionResult) -> None:
     axs[2].set_title("Reconstructed")
     axs[3].imshow(result.residuals)
     axs[3].set_title("Residuals")
-    axs[4].imshow(result.result)
+    axs[4].imshow(result.superimposed)
     axs[4].set_title("Superimposed")
     plt.show()
 

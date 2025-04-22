@@ -5,8 +5,8 @@ import torchvision.transforms.v2 as transforms
 class _BasePreprocessing(transforms.Compose):
     def __init__(
         self,
-        target_img_width: int,
         target_img_height: int,
+        target_img_width: int,
         augmentations: list[transforms.Transform],
     ) -> None:
         super().__init__(
@@ -14,7 +14,7 @@ class _BasePreprocessing(transforms.Compose):
                 transforms.ToImage(),
                 transforms.Grayscale(num_output_channels=1),
                 transforms.functional.autocontrast,
-                transforms.Resize((target_img_width, target_img_height)),
+                transforms.Resize((target_img_height, target_img_width)),
                 *augmentations,
                 transforms.ToDtype(dtype=torch.float32, scale=True),
             ]
@@ -22,14 +22,10 @@ class _BasePreprocessing(transforms.Compose):
 
 
 class TrainingPreprocessing(_BasePreprocessing):
-    def __init__(
-        self,
-        target_img_width: int,
-        target_img_height: int,
-    ) -> None:
+    def __init__(self, target_img_height: int, target_img_width: int) -> None:
         super().__init__(
-            target_img_width,
             target_img_height,
+            target_img_width,
             [
                 transforms.RandomHorizontalFlip(),
                 transforms.RandomVerticalFlip(),
@@ -38,5 +34,5 @@ class TrainingPreprocessing(_BasePreprocessing):
 
 
 class InferencePreprocessing(_BasePreprocessing):
-    def __init__(self, target_img_width: int, target_img_height: int) -> None:
-        super().__init__(target_img_width, target_img_height, [])
+    def __init__(self, target_img_height: int, target_img_width: int) -> None:
+        super().__init__(target_img_height, target_img_width, [])

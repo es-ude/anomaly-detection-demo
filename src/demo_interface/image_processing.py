@@ -1,134 +1,96 @@
 from abc import ABC, abstractmethod
-from dataclasses import asdict, dataclass
 from pathlib import Path
+from typing import Protocol
 
 import cv2
-import numpy as np
 import torch
 
 from src.anomaly_detection.anomaly_detector import AnomalyDetector, DetectionResult
-from src.demo_interface.utils import convert_image_to_bytes
+from src.demo_interface.image import Image, convert_bgr_to_rgb, convert_rgb_to_bgr
 
 
-@dataclass
-class SingleImageResult:
-    """
-    Dataclass for only one image result (BaseProcessor and CalibrationProcessor)
-    """
-
-    result: bytes | None
+class ImageProcessor(Protocol):
+    def process(self, image: Image | None) -> DetectionResult | Image | None: ...
 
 
-@dataclass
-class AnomalyResult:
-    """Dataclass for anomaly detection result with multiple images."""
-
-    result: bytes | None
-    original: bytes
-    preprocessed: bytes
-    reconstructed: bytes
-    residuals: bytes
-
-
-@dataclass
-class ProcessedImagesResult:
-    result: bytes | None
-    original: bytes | None = None
-    preprocessed: bytes | None = None
-    reconstructed: bytes | None = None
-    residuals: bytes | None = None
-
-
-class AbstractImageProcessor(ABC):
-    """
-    Abstract base class for all image processor classes.
-    """
-
-    def __init__(self, cropped_frame_length: int = 800):
-        self.cropped_frame_length = cropped_frame_length
-
-    def _crop_center_square(self, frame: np.ndarray) -> np.ndarray:
-        """
-        Crops a square frame from the input frame based on its center and cropped_frame_length.
-        """
-        height, width, _ = frame.shape
-        center = (width // 2, height // 2)
-        half_cropped_frame_length = self.cropped_frame_length // 2
-
-        x_min = center[0] - half_cropped_frame_length
-        x_max = center[0] + half_cropped_frame_length
-        y_min = center[1] - half_cropped_frame_length
-        y_max = center[1] + half_cropped_frame_length
-
-        cropped_frame = frame[y_min:y_max, x_min:x_max]
-
-        return cropped_frame
+class _BaseImageProcessor(ABC):
+    def __init__(
+        self,
+        target_image_size: tuple[int, int],
+        flip_horizontal: bool = True,
+        flip_vertical: bool = True,
+    ) -> None:
+        self.target_image_size = target_image_size
+        self.flip_horizontal = flip_horizontal
+        self.flip_vertical = flip_vertical
 
     @abstractmethod
-    def _process_frame(self, frame: np.ndarray) -> SingleImageResult | AnomalyResult:
-        """
-        Abstract method for processing a single frame.
-        """
+    def _process(self, image: Image) -> DetectionResult | Image:
         pass
 
-    def process_frame(self, frame: np.ndarray) -> SingleImageResult | AnomalyResult:
-        if frame is None:
-            return SingleImageResult(
-                result=None,
-            )
-        cropped_frame = self._crop_center_square(frame)
-        return self._process_frame(cropped_frame)
+    def process(self, image: Image | None) -> DetectionResult | Image | None:
+        if image is None:
+            return None
+        cropped_image = _center_crop(image, self.target_image_size)
+        flipped_image = _flip(cropped_image, self.flip_horizontal, self.flip_vertical)
+        return self._process(flipped_image)
 
 
-class BasicProcessor(AbstractImageProcessor):
-    """
-    Simple Processing class for just return the received frame.
-    """
-
-    def _process_frame(self, frame: np.ndarray) -> SingleImageResult | AnomalyResult:
-        frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
-        return SingleImageResult(result=convert_image_to_bytes(frame))
+class BasicProcessor(_BaseImageProcessor):
+    def _process(self, image: Image) -> Image:
+        return image
 
 
-class CalibrationProcessor(AbstractImageProcessor):
-    def _process_frame(self, frame: np.ndarray) -> SingleImageResult | AnomalyResult:
-        frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
-        center = (frame.shape[1] // 2, frame.shape[0] // 2)
-        processed_frame = cv2.circle(
-            frame.copy(), center=center, radius=175, color=(0, 0, 255), thickness=5
+class CalibrationProcessor(_BaseImageProcessor):
+    def _process(self, image: Image) -> Image:
+        height, width, _ = image.shape
+        image_with_circle = cv2.circle(
+            img=convert_rgb_to_bgr(image),
+            center=(height // 2, width // 2),
+            radius=175,
+            color=(0, 0, 255),
+            thickness=5,
         )
-        return SingleImageResult(result=convert_image_to_bytes(processed_frame))
+        return convert_bgr_to_rgb(image_with_circle)
 
 
-class AnomalyDetectorProcessor(AbstractImageProcessor):
-    def __init__(self, inference_img_size: tuple[int, int] = (128, 128)):
-        super().__init__()
+class AnomalyDetectorProcessor(_BaseImageProcessor):
+    def __init__(
+        self,
+        model_file: Path,
+        target_image_size: tuple[int, int],
+        inference_image_size: tuple[int, int],
+    ) -> None:
+        super().__init__(target_image_size)
         self.anomaly_detector = AnomalyDetector(
-            model_file=Path(__file__).parents[1]
-            / "anomaly_detection/model_checkpoints/cookie/model.pt",
-            input_img_size=(self.cropped_frame_length, self.cropped_frame_length),
-            inference_img_size=inference_img_size,
-            device=torch.device("mps"),
+            model_file=model_file,
+            input_image_size=self.target_image_size,
+            inference_image_size=inference_image_size,
+            device=torch.device("cpu"),
         )
         self.anomaly_detector.load_model()
 
-    def _detect_anomaly(self, frame: np.ndarray) -> DetectionResult:
-        return self.anomaly_detector.detect(frame)
+    def _process(self, image: Image) -> DetectionResult:
+        return self.anomaly_detector.detect(image)
 
-    def _process_frame(self, frame: np.ndarray) -> SingleImageResult | AnomalyResult:
-        # images are flipped for a more intuitive look ine the ui
-        frame = cv2.flip(frame, 1)
-        frame = cv2.flip(frame, 0)
-        frame = np.array(frame, dtype=np.uint8)
-        result = self._detect_anomaly(frame)
-        result = asdict(result)
 
-        for key in result.keys():
-            img = result[key]
-            img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
-            img_bytes = convert_image_to_bytes(img)
-            result[key] = img_bytes
+def _center_crop(image: Image, image_size: tuple[int, int]) -> Image:
+    h_input, w_input, _ = image.shape
+    h_output, w_output = image_size
 
-        processed_images_result = AnomalyResult(**result)
-        # processed_frame = cv2.cvtColor(processed_frame, cv2.COLOR_RGB2BGR)
-        return processed_images_result
+    x_mid, y_mid = w_input // 2, h_input // 2
+    x_delta, y_delta = w_output // 2, h_output // 2
+    x_min = x_mid - x_delta
+    x_max = x_mid + x_delta
+    y_min = y_mid - y_delta
+    y_max = y_mid + y_delta
+
+    cropped_frame = image[y_min:y_max, x_min:x_max]
+
+    return cropped_frame
+
+
+def _flip(image: Image, horizontal: bool = False, vertical: bool = False) -> Image:
+    image = cv2.flip(image, 1) if horizontal else image
+    image = cv2.flip(image, 0) if vertical else image
+    return image
