@@ -1,3 +1,4 @@
+import asyncio
 import base64
 from collections.abc import Callable
 from dataclasses import fields
@@ -25,18 +26,21 @@ class DemoApplicationController:
         self._placeholder_image = _load_image(placeholder_image_file)
         self._image_processor: ImageProcessor = _NoneImageProcessor()
         self._update_ui_callback: UpdateUICallback = lambda _: None
+        self._main_lock = asyncio.Lock()
 
     async def run(self) -> None:
         while True:
-            processed_frame = await self._take_and_process_frame()
-            ui_data = self._frame_to_ui_data(processed_frame)
-            self._update_ui_callback(ui_data)  # type: ignore
+            async with self._main_lock:
+                processed_frame = await self._take_and_process_frame()
+                ui_data = self._frame_to_ui_data(processed_frame)
+                self._update_ui_callback(ui_data)  # type: ignore
 
-    def set_update_ui_callback(self, callback: UpdateUICallback) -> None:
-        self._update_ui_callback = callback
-
-    def set_image_processor(self, image_processor: ImageProcessor) -> None:
-        self._image_processor = image_processor
+    async def set_handler(
+        self, image_processor: ImageProcessor, ui_callback: UpdateUICallback
+    ) -> None:
+        async with self._main_lock:
+            self._image_processor = image_processor
+            self._update_ui_callback = ui_callback
 
     def close(self) -> None:
         self._camera.release()

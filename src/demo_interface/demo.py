@@ -59,11 +59,10 @@ def setup() -> None:
         ui.run_javascript("window.location='/anomaly-detection'")
 
     @ui.page("/basic")
-    def basic_page() -> None:
+    async def basic_page() -> None:
         """
         Basic image processing page. Image from the camera is just returned and displayed.
         """
-        app_controller.set_image_processor(basic_processor)
         _header()
 
         result_image = (
@@ -75,14 +74,13 @@ def setup() -> None:
         def update_images(result: str) -> None:
             result_image.set_source(result)
 
-        app_controller.set_update_ui_callback(update_images)
+        await app_controller.set_handler(basic_processor, update_images)
 
     @ui.page("/calibration")
-    def calibration_page() -> None:
+    async def calibration_page() -> None:
         """
         Calibration image processing page. Image from the camera is returned with a red circle, which the .
         """
-        app_controller.set_image_processor(calibration_processor)
         _header()
 
         with ui.column().classes("w-full items-center mt-10"):
@@ -95,14 +93,13 @@ def setup() -> None:
         def update_images(result: str) -> None:
             result_image.set_source(result)
 
-        app_controller.set_update_ui_callback(update_images)
+        await app_controller.set_handler(calibration_processor, update_images)
 
     @ui.page("/anomaly-detection")
-    def anomaly_detection_page() -> None:
+    async def anomaly_detection_page() -> None:
         """
         Anomaly Detection page. Detected anomalies and intermediate image processing steps are displayed.
         """
-        app_controller.set_image_processor(anomaly_detector_processor)
         _header()
 
         with ui.column().classes("w-full items-center mt-1"):
@@ -231,7 +228,7 @@ def setup() -> None:
             mini_residuals_image.set_source(get_image("residuals"))
             result_mini_image.set_source(get_image("superimposed"))
 
-        app_controller.set_update_ui_callback(update_images)
+        await app_controller.set_handler(anomaly_detector_processor, update_images)
 
     asyncio.create_task(app_controller.run())
     app.on_shutdown(app_controller.close)
