@@ -10,7 +10,7 @@ from src.anomaly_detection.model import Autoencoder
 from src.anomaly_detection.persistence import load_model
 from src.anomaly_detection.preprocessing import InferencePreprocessing
 
-type Image = cv2.typing.MatLike
+Image = cv2.typing.MatLike
 
 
 @dataclass

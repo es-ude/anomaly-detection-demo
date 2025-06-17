@@ -1,3 +1,4 @@
+from os import environ
 import asyncio
 from pathlib import Path
 
@@ -16,6 +17,7 @@ UDE_LOGO = BASE_PATH / "assets" / "logo_ude_weiß_transparent.svg"
 PLACEHOLDER_IMAGE = BASE_PATH / "assets" / "placeholder_2.png"
 ENCODER_VISUALIZATION = BASE_PATH / "assets" / "darstellung_encoder_decoder_weiß.png"
 
+USE_RASPBERRY_CAMERA_MODULE = environ.get("ENABLE_PI_CAM", False)
 HEIGHT_BIG_IMAGE = 750
 WIDTH_BIG_IMAGE = 750
 HEIGHT_SMALL_IMAGE_CONTAINER = 200
@@ -25,7 +27,9 @@ SMALL_IMAGE_LENGTH = 175
 
 def setup() -> None:
     app_controller = DemoApplicationController(
-        cam_port=0, placeholder_image_file=PLACEHOLDER_IMAGE
+        cam_port=int(environ.get("CAM_PORT", 0)),
+        placeholder_image_file=PLACEHOLDER_IMAGE,
+        use_picam=USE_RASPBERRY_CAMERA_MODULE,
     )
     basic_processor = BasicProcessor(target_image_size=(800, 800))
     calibration_processor = CalibrationProcessor(target_image_size=(800, 800))

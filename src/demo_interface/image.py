@@ -1,6 +1,6 @@
 import cv2
 
-type Image = cv2.typing.MatLike
+Image = cv2.typing.MatLike
 
 
 def convert_rgb_to_bgr(image: Image) -> Image:

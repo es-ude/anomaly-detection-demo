@@ -28,30 +28,55 @@ MVTEC_CKPT_DIR=<absolute_path_to_project_dir>/src/anomaly_detection/model_checkp
 COOKIE_DATASET_DIR=<absolute_path_to_dataset>/v2
 COOKIE_OUTPUT_DIR=<absolute_path_to_output_dir>/cookie
 COOKIE_CKPT_DIR=<absolute_path_to_project_dir>/src/anomaly_detection/model_checkpoints/cookie
-
 ```
 
 ## Run Experiments
 
 ### MVTec (Hazelnut) Training
+
 ```bash
 uv run --env-file=.env src/anomaly_detection/experiments/train_mvtec_autoencoder.py
 ```
 
 ### Cookie Training
+
 ```bash
 uv run --env-file=.env src/anomaly_detection/experiments/train_cookie_autoencoder.py
 ```
 
-# Training on AmplitUDE HPC
+## Run Demo Application
 
-## Zip Folder
+> [!IMPORTANT]
+>
+> To use the Raspberry Camera Module system packages must be accessible.
+> The `pycamera2` library and the `libcamera` implementation are required!
+> This can be accomplished by creating the virtual environment with:
+>
+> ```bash
+> uv venv --system-site-packages
+> ```
+
+You can start the demo with:
+
+```bash
+uv run src/demo_interface/demo.py
+```
+
+> [!NOTE]
+>
+> If you want to use a standard webcam instead of the raspberry camera module you need to update the `USE_RASPBERRY_CAMERA_MODULE` parameter in the [demo.py file](src/demo_interface/demo.py)
+
+## Training on AmplitUDE HPC
+
+### Zip Folder
+
 ```bash
 zip -r anomaly-detection-demo.zip anomaly-detection-demo -x anomaly-detection-demo/.venv/\*
 ```
+
 This command zips the entire project folder, while excluding the venv directory and its contents.
 
-## Data Storage Concept
+### Data Storage Concept
 
 /lustre/hpc_home/<unikennun>/\: permanent project data (quota=0.5TB)
 
@@ -59,9 +84,10 @@ This command zips the entire project folder, while excluding the venv directory 
 
 /homes/<unikennung>/: university wide home storage
 
-## Copy Files to HPC
+### Copy Files to HPC
 
 RSYNC
+
 ```bash
 rsync -avz --exclude '.venv' /path/to/local/directory <unikennung>@gateway.amplitude.uni-due.de:/lustre/scratch/<your-workspace>/
 
@@ -71,11 +97,12 @@ The -z option compresses data during transfer to speed up the process.
 ```
 
 scp
+
 ```bash
 scp /path/to/local/file <unikennung>@gateway.amplitude.uni-due.de:/lustre/scratch/<your-workspace>/
 ```
 
-## Jobscript (with slurm)
+### Jobscript (with slurm)
 
 ```bash
 #!/bin/bash
@@ -117,13 +144,8 @@ uv sync
 uv run --env-file=.env python -u src/anomaly_detection/experiments/train_cookie_autoencoder.py
 ```
 
-## Run Job (with slurm)
+### Run Job (with slurm)
 
 submit job: sbatch jobscript.sh </br>
 queue overview: squeue -l </br>
 cancel job: scancel <job_id> </br>
-
-
-
-
-

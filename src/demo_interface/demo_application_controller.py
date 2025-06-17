@@ -8,11 +8,10 @@ import cv2
 from nicegui import run
 
 from src.anomaly_detection.anomaly_detector import DetectionResult
-from src.demo_interface.camera import Camera
 from src.demo_interface.image import Image, convert_rgb_to_bgr
 from src.demo_interface.image_processing import ImageProcessor
 
-type UpdateUICallback = Callable[[dict[str, str]], None] | Callable[[str], None]
+UpdateUICallback = Callable[[dict[str, str]], None] | Callable[[str], None]
 
 
 class _NoneImageProcessor:
@@ -21,8 +20,17 @@ class _NoneImageProcessor:
 
 
 class DemoApplicationController:
-    def __init__(self, cam_port: int | str, placeholder_image_file: Path) -> None:
-        self._camera = Camera(cam_port, width=1920, height=1080)
+    def __init__(
+        self, cam_port: int | str, placeholder_image_file: Path, use_picam: bool = False
+    ) -> None:
+        if use_picam:
+            from src.demo_interface.picamv3_camera import Camera as PiCamera
+
+            self._camera = PiCamera(cam_port, width=1920, height=1080)
+        else:
+            from src.demo_interface.opencv_camera import Camera as OpencvCamera
+
+            self._camera = OpencvCamera(cam_port, width=1920, height=1080)  # type: ignore
         self._placeholder_image = _load_image(placeholder_image_file)
         self._image_processor: ImageProcessor = _NoneImageProcessor()
         self._update_ui_callback: UpdateUICallback = lambda _: None
