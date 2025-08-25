@@ -21,6 +21,7 @@ wheels/
 .vimrc
 
 outputs
+.env
 
 .DS_Store
 
