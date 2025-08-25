@@ -104,12 +104,6 @@ def _(Any, CookieAD, ds_test, ds_train, model, pd, torch):
 
 
 @app.cell
-def _():
-    128*128*1
-    return
-
-
-@app.cell
 def _(PCA, df, mo, np, plt):
     latent_vectors = np.stack(df["encoded"]).reshape(len(df), -1)
 
