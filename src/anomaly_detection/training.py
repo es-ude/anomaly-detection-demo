@@ -73,3 +73,64 @@ def train_autoencoder(
         )
 
     return history
+
+
+def train_classifier(
+    model: torch.nn.Module,
+    ds_train: Dataset,
+    ds_test: Dataset,
+    batch_size: int,
+    epochs: int,
+    learning_rate: float,
+    num_workers: int = 0,
+    device: torch.device = torch.device("cpu"),
+) -> dict[str, list[float]]:
+    history = dict(epoch=[], train_loss=[], test_loss=[])
+
+    data_loader = partial(DataLoader, batch_size=batch_size, num_workers=num_workers)
+    dl_train = data_loader(ds_train, shuffle=True)
+    dl_test = data_loader(ds_test, shuffle=False)
+
+    loss_fn = torch.nn.CrossEntropyLoss()
+    optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
+
+    model.to(device)
+
+    for epoch in range(1, epochs + 1):
+        history["epoch"].append(epoch)
+
+        model.train()
+        running_loss = 0.0
+
+        for samples, labels in dl_train:
+            samples = samples.to(device)
+
+            model.zero_grad()
+            predicted = model(samples)
+            loss = loss_fn(predicted, labels)
+            loss.backward()
+            optimizer.step()
+            running_loss += loss.item()
+
+        history["train_loss"].append(running_loss / len(dl_train))
+
+        model.eval()
+        running_loss = 0.0
+
+        with torch.no_grad():
+            for samples, labels in dl_test:
+                samples = samples.to(device)
+
+                predicted = model(samples)
+                loss = loss_fn(predicted, labels)
+                running_loss += loss.item()
+
+        history["test_loss"].append(running_loss / len(dl_test))
+
+        print(
+            f"[{history['epoch'][-1]}/{epochs}] "
+            f"train_loss: {history['train_loss'][-1]:.04f} ; "
+            f"test_loss: {history['test_loss'][-1]:.04f}"
+        )
+
+    return history
