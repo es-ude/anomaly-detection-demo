@@ -12,10 +12,12 @@ from src.anomaly_detection.preprocessing import TrainingPreprocessing
 from src.anomaly_detection.training import train_autoencoder
 
 OUTPUT_DIR = Path(os.environ["COOKIE_OUTPUT_DIR"])
-DATASET_DIR = Path(os.environ["COOKIE_DATASET_DIR"])
+DATASET_DIR = Path(os.environ["COOKIE_AE_DATASET_DIR"])
 
 
 def main() -> None:
+    defs.save_version(OUTPUT_DIR / "commit_hash.txt")
+
     model = Autoencoder()
     summary(model, input_size=(1, defs.IMAGE_HEIGHT, defs.IMAGE_WIDTH), device="cpu")
 
@@ -34,19 +36,18 @@ def main() -> None:
         device=defs.DEVICE,
     )
 
-    defs.save_model(model, OUTPUT_DIR)
-    defs.save_history(history, OUTPUT_DIR)
-    defs.save_version(OUTPUT_DIR)
+    defs.save_model(model, OUTPUT_DIR / "ae_model.pt")
+    defs.save_history(history, OUTPUT_DIR / "ae_history.csv")
 
 
-def _autoencoder_datasets() -> list[Dataset]:
+def _autoencoder_datasets() -> tuple[Dataset, Dataset]:
     ds = CookieAdDataset(
         dataset_dir=DATASET_DIR,
         training_set=True,
         sample_transform=TrainingPreprocessing(defs.IMAGE_HEIGHT, defs.IMAGE_WIDTH),
         in_memory=True,
     )
-    return random_split(ds, lengths=[0.8, 0.2])
+    return tuple(random_split(ds, lengths=[0.8, 0.2]))  # type: ignore
 
 
 if __name__ == "__main__":

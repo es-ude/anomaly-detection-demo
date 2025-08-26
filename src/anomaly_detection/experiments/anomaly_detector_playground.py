@@ -16,7 +16,7 @@ DEVICE = torch.device(os.environ["DEVICE"])
 CKPT_DIR = Path(os.environ["COOKIE_CKPT_DIR"])
 MODEL_FILE_NAME = os.environ["MODEL_FILE_NAME"]
 
-DATASET_DIR = Path(os.environ["COOKIE_DATASET_DIR"])
+DATASET_DIR = Path(os.environ["COOKIE_AE_DATASET_DIR"])
 IMAGE_PATH = DATASET_DIR / "test" / "bad"
 
 
