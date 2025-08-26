@@ -15,17 +15,13 @@ NUM_WORKERS=0
 IMAGE_WIDTH=128
 IMAGE_HEIGHT=128
 
-HISTORY_FILE_NAME=history.csv
-VERSION_FILE_NAME=commit_hash.txt
-MODEL_FILE_NAME=model.pt
-QUANT_MODEL_FILE_NAME=model_int8.pt
-
 MVTEC_DATASET_DIR=<absolute_path_to_dataset>
 MVTEC_OBJECT=hazelnut
 MVTEC_OUTPUT_DIR=<absolute_path_to_output_dir>/mvtec
 MVTEC_CKPT_DIR=<absolute_path_to_project_dir>/src/anomaly_detection/model_checkpoints/mvtec
 
-COOKIE_DATASET_DIR=<absolute_path_to_dataset>/v2
+COOKIE_AE_DATASET_DIR=<absolute_path_to_dataset>/v2
+COOKIE_CLF_DATASET_DIR=<absolute_path_to_dataset>
 COOKIE_OUTPUT_DIR=<absolute_path_to_output_dir>/cookie
 COOKIE_CKPT_DIR=<absolute_path_to_project_dir>/src/anomaly_detection/model_checkpoints/cookie
 ```
