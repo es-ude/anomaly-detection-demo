@@ -6,7 +6,7 @@ from torchsummary import summary
 from torchvision.transforms.v2 import RandomErasing
 
 import src.anomaly_detection.experiments.training_definitions as defs
-from src.anomaly_detection.datasets.cookie_ad import CookieAD
+from src.anomaly_detection.datasets.cookie_ad import CookieAdDataset
 from src.anomaly_detection.model import Autoencoder
 from src.anomaly_detection.preprocessing import TrainingPreprocessing
 from src.anomaly_detection.training import train_autoencoder
@@ -40,7 +40,7 @@ def main() -> None:
 
 
 def _autoencoder_datasets() -> list[Dataset]:
-    ds = CookieAD(
+    ds = CookieAdDataset(
         dataset_dir=DATASET_DIR,
         training_set=True,
         sample_transform=TrainingPreprocessing(defs.IMAGE_HEIGHT, defs.IMAGE_WIDTH),
