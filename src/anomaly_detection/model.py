@@ -78,3 +78,34 @@ def _deconv_block(in_channels: int, out_channels: int) -> list[torch.nn.Module]:
         ),
         torch.nn.ReLU(),
     ]
+
+
+class Classifier(torch.nn.Module):
+    def __init__(self, encoder: torch.nn.Module) -> None:
+        super().__init__()
+        self.encoder = encoder
+        self.classifier = torch.nn.Sequential(
+            torch.nn.Conv2d(
+                in_channels=128, out_channels=2, kernel_size=3, padding="same"
+            ),
+            torch.nn.MaxPool2d(kernel_size=8),
+            torch.nn.Flatten(start_dim=-3),
+        )
+
+    def forward(self, inputs: torch.Tensor) -> torch.Tensor:
+        with torch.no_grad():
+            latent_space = self.encoder(inputs)
+        return self.classifier(latent_space)
+
+
+class CookieAdModel(torch.nn.Module):
+    def __init__(self, autoencoder: Autoencoder, classifier: Classifier) -> None:
+        super().__init__()
+        self.autoencoder = autoencoder
+        self.classifier = classifier
+
+    def forward(self, inputs: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
+        latent_space = self.autoencoder.encoder(inputs)
+        reconstructed = self.autoencoder.decoder(latent_space)
+        prediction = self.classifier.classifier(latent_space)
+        return reconstructed, prediction
