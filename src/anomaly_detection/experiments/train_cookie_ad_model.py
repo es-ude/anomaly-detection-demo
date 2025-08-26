@@ -53,10 +53,9 @@ def main() -> None:
     defs.save_model(classifier, OUTPUT_DIR / "clf_model.pt")
     defs.save_history(history, OUTPUT_DIR / "clf_history.csv")
 
-    defs.save_model(
-        model=CookieAdModel(autoencoder, classifier),
-        destination=OUTPUT_DIR / "cookie_ad_model.pt",
-    )
+    model = CookieAdModel()
+    model.from_models(autoencoder, classifier)
+    defs.save_model(model=model, destination=OUTPUT_DIR / "cookie_ad_model.pt")
 
 
 def _autoencoder_datasets() -> tuple[Dataset, Dataset]:

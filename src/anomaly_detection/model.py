@@ -99,13 +99,17 @@ class Classifier(torch.nn.Module):
 
 
 class CookieAdModel(torch.nn.Module):
-    def __init__(self, autoencoder: Autoencoder, classifier: Classifier) -> None:
+    def __init__(self) -> None:
         super().__init__()
-        self.autoencoder = autoencoder
-        self.classifier = classifier
+        self.autoencoder = Autoencoder()
+        self.classifier = Classifier(self.autoencoder.encoder)
 
     def forward(self, inputs: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
         latent_space = self.autoencoder.encoder(inputs)
         reconstructed = self.autoencoder.decoder(latent_space)
-        prediction = self.classifier.classifier(latent_space)
+        prediction = self.classifier(latent_space)
         return reconstructed, prediction
+
+    def from_models(self, autoencoder: Autoencoder, classifier: Classifier) -> None:
+        self.autoencoder = autoencoder
+        self.classifier = classifier.classifier
