@@ -6,17 +6,18 @@ app = marimo.App(width="medium")
 
 @app.cell
 def imports():
+    import marimo as mo
+
     import os
     from functools import partial
     from pathlib import Path
     from typing import Any, cast
 
-    import cv2
-    import marimo as mo
-    import matplotlib.pyplot as plt
+    import torch
     import numpy as np
     import pandas as pd
-    import torch
+    import matplotlib.pyplot as plt
+    import plotly.express as px
     from sklearn.decomposition import PCA
 
     from src.anomaly_detection.datasets.cookie_clf import CookieClfDataset
@@ -26,10 +27,8 @@ def imports():
     from src.anomaly_detection.training import train_classifier
 
     DATASET_DIR = Path(os.environ["COOKIE_CLF_DATASET_DIR"])
-    OUTPUT_DIR = Path(os.environ["COOKIE_OUTPUT_DIR"])
-
-    AE_MODEL_FILE = OUTPUT_DIR / os.environ["MODEL_FILE_NAME"]
-    HISTORY_FILE = OUTPUT_DIR / os.environ["HISTORY_FILE_NAME"]
+    CKPT_DIR = Path(os.environ["COOKIE_CKPT_DIR"])
+    AE_MODEL_FILE = CKPT_DIR / "model.pt"
     return (
         AE_MODEL_FILE,
         Any,
@@ -45,6 +44,7 @@ def imports():
         partial,
         pd,
         plt,
+        px,
         torch,
         train_classifier,
     )
@@ -121,20 +121,24 @@ def ae_inference(
 
 
 @app.cell
-def latent_space(PCA, df, mo, np, plt):
+def latent_space(PCA, df, mo, np, px):
     df_selected = df[df["set"] == "train"]
     latent_vectors = np.stack(df_selected["encoded"]).reshape(len(df_selected), -1)
 
     pca = PCA(n_components=3)
     cluster = pca.fit_transform(latent_vectors)
 
-    def plot_latent_space() -> plt.Figure:
-        fig = plt.figure()
-        ax = fig.add_subplot(projection="3d")
-        ax.scatter(cluster[:, 0], cluster[:, 1], cluster[:, 2], c=df_selected["label"])
-        return fig
+    mo.ui.plotly(
+        px.scatter_3d(x=cluster[:, 0], y=cluster[:, 1], z=cluster[:, 2], color=df_selected["label"], opacity=0.7)
+    )
 
-    mo.mpl.interactive(plot_latent_space())
+    # def plot_latent_space() -> plt.Figure:
+    #     fig = plt.figure()
+    #     ax = fig.add_subplot(projection="3d")
+    #     ax.scatter(cluster[:, 0], cluster[:, 1], cluster[:, 2], c=df_selected["label"])
+    #     return fig
+    # 
+    # mo.mpl.interactive(plot_latent_space())
     return
 
 
@@ -164,7 +168,6 @@ def train_clf(
     autoencoder,
     ds_test,
     ds_train,
-    mo,
     plt,
     train_classifier,
 ):
@@ -188,7 +191,7 @@ def train_clf(
         ax.legend()
         return fig
 
-    mo.mpl.interactive(plot_history())
+    plot_history()
     return (classifier,)
 
 
