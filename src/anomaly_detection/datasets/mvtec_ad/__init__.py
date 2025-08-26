@@ -1,4 +1,4 @@
 from .constants import CLASSES
-from .dataset import MVTecAD
+from .dataset import MVTecAdDataset
 
-__all__ = ["CLASSES", "MVTecAD"]
+__all__ = ["CLASSES", "MVTecAdDataset"]

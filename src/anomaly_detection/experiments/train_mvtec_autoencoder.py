@@ -6,7 +6,7 @@ from torchsummary import summary
 from torchvision.transforms.v2 import RandomErasing
 
 import src.anomaly_detection.experiments.training_definitions as defs
-from src.anomaly_detection.datasets.mvtec_ad import MVTecAD
+from src.anomaly_detection.datasets.mvtec_ad import MVTecAdDataset
 from src.anomaly_detection.model import Autoencoder
 from src.anomaly_detection.preprocessing import TrainingPreprocessing
 from src.anomaly_detection.training import train_autoencoder
@@ -17,6 +17,8 @@ OBJECT = os.environ["MVTEC_OBJECT"]
 
 
 def main() -> None:
+    defs.save_version(OUTPUT_DIR / "commit_hash.txt")
+
     model = Autoencoder()
     summary(model, input_size=(1, defs.IMAGE_HEIGHT, defs.IMAGE_WIDTH), device="cpu")
 
@@ -35,13 +37,12 @@ def main() -> None:
         device=defs.DEVICE,
     )
 
-    defs.save_model(model, OUTPUT_DIR)
-    defs.save_history(history, OUTPUT_DIR)
-    defs.save_version(OUTPUT_DIR)
+    defs.save_model(model, OUTPUT_DIR / "ae_model.pt")
+    defs.save_history(history, OUTPUT_DIR / "ae_history.csv")
 
 
-def _autoencoder_datasets() -> list[Dataset]:
-    ds = MVTecAD(
+def _autoencoder_datasets() -> tuple[Dataset, Dataset]:
+    ds = MVTecAdDataset(
         dataset_dir=DATASET_DIR,
         object=OBJECT,
         training_set=True,
@@ -49,7 +50,7 @@ def _autoencoder_datasets() -> list[Dataset]:
         sample_transform=TrainingPreprocessing(defs.IMAGE_HEIGHT, defs.IMAGE_WIDTH),
         in_memory=True,
     )
-    return random_split(ds, lengths=[0.8, 0.2])
+    return tuple(random_split(ds, lengths=[0.8, 0.2]))  # type: ignore
 
 
 if __name__ == "__main__":

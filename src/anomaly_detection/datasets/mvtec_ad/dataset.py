@@ -11,7 +11,7 @@ from src.anomaly_detection.datasets.image_utils import get_image_paths, load_ima
 from .constants import CLASSES
 
 
-class MVTecAD(Dataset):
+class MVTecAdDataset(Dataset):
     def __init__(
         self,
         dataset_dir: Path,
@@ -28,7 +28,11 @@ class MVTecAD(Dataset):
         self.object = object
         self.training_set = training_set
         self.anomalies = CLASSES[self.object] if anomalies is None else anomalies
-        self.sample_transform = Compose([ToImage(), sample_transform])
+        self.sample_transform = (
+            ToImage()
+            if sample_transform is None
+            else Compose([ToImage(), sample_transform])
+        )
         self.target_transform = target_transform
         self.in_memory = in_memory
 
