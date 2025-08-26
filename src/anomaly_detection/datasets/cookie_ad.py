@@ -14,7 +14,7 @@ CLASSES = dict(train=["good"], test=["good", "bad"])
 _AREA_TO_CROP = (180, 490, 900, 900)
 
 
-class CookieAD(Dataset):
+class CookieAdDataset(Dataset):
     def __init__(
         self,
         dataset_dir: Path,
@@ -30,12 +30,14 @@ class CookieAD(Dataset):
         self.training_set = training_set
 
         additional_transforms = []
+
         if dataset_version == 1:
             additional_transforms.append(lambda img: crop(img, *_AREA_TO_CROP))
 
-        self.sample_transform = Compose(
-            [ToImage(), *additional_transforms, sample_transform]
-        )
+        if sample_transform is not None:
+            additional_transforms.append(sample_transform)
+
+        self.sample_transform = Compose([ToImage(), *additional_transforms])
         self.target_transform = target_transform
         self.in_memory = in_memory
 
