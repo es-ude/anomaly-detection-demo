@@ -49,6 +49,8 @@ def main() -> None:
         batch_size=64,
         epochs=100,
         learning_rate=1e-3,
+        num_workers=defs.NUM_WORKERS,
+        device=defs.DEVICE,
     )
     defs.save_model(classifier, OUTPUT_DIR / "clf_model.pt")
     defs.save_history(history, OUTPUT_DIR / "clf_history.csv")
