@@ -102,7 +102,7 @@ class CookieAdModel(torch.nn.Module):
     def __init__(self) -> None:
         super().__init__()
         self.autoencoder = Autoencoder()
-        self.classifier = Classifier(self.autoencoder.encoder)
+        self.classifier = Classifier(self.autoencoder.encoder).classifier
 
     def forward(self, inputs: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
         latent_space = self.autoencoder.encoder(inputs)
