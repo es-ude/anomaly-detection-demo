@@ -59,14 +59,11 @@ class DemoApplicationController:
 
     def _frame_to_ui_data(
         self, frame: DetectionResult | Image | None
-    ) -> dict[str, str] | str:
+    ) -> dict[str, str | bool] | str:
         if frame is None:
             return _image_to_string(self._placeholder_image)
         elif isinstance(frame, DetectionResult):
-            return {
-                field.name: _image_to_string(getattr(frame, field.name))
-                for field in fields(frame)  # type: ignore
-            }
+            return _detection_result_to_ui_data(frame)
         return _image_to_string(frame)
 
 
@@ -81,3 +78,15 @@ def _image_to_string(image: Image) -> str:
         raise RuntimeError("Failed to convert image to bytes.")
     b64_image = base64.b64encode(buffer.tobytes()).decode("utf-8")
     return f"data:image/jpeg;base64,{b64_image}"
+
+
+def _detection_result_to_ui_data(
+    detection_result: DetectionResult,
+) -> dict[str, str | bool]:
+    ui_data = dict()
+    for field in fields(detection_result):
+        value = getattr(detection_result, field.name)
+        ui_data[field.name] = (
+            value if isinstance(value, bool) else _image_to_string(value)
+        )
+    return ui_data

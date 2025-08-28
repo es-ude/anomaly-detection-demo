@@ -20,7 +20,7 @@ def _():
 
     DATASET_DIR = Path(os.environ["COOKIE_CLF_DATASET_DIR"])
     CKPT_DIR = Path(os.environ["COOKIE_CKPT_DIR"])
-    AD_MODEL_FILE = CKPT_DIR / "cookie_ad_model.pt"
+    AD_MODEL_FILE = CKPT_DIR / "ad_model.pt"
     return (
         AD_MODEL_FILE,
         CookieAdModel,

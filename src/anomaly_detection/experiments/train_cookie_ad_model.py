@@ -57,7 +57,7 @@ def main() -> None:
 
     model = CookieAdModel()
     model.from_models(autoencoder, classifier)
-    defs.save_model(model=model, destination=OUTPUT_DIR / "cookie_ad_model.pt")
+    defs.save_model(model=model, destination=OUTPUT_DIR / "ad_model.pt")
 
 
 def _autoencoder_datasets() -> tuple[Dataset, Dataset]:

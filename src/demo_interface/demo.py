@@ -1,5 +1,5 @@
 import asyncio
-from os import environ
+import os
 from pathlib import Path
 
 from nicegui import app, ui
@@ -17,9 +17,10 @@ UDE_LOGO = BASE_PATH / "assets" / "logo_ude_weiß_transparent.svg"
 PLACEHOLDER_IMAGE = BASE_PATH / "assets" / "placeholder_2.png"
 ENCODER_VISUALIZATION = BASE_PATH / "assets" / "darstellung_encoder_decoder_weiß.png"
 
-USE_RASPBERRY_CAMERA_MODULE = environ.get("ENABLE_PI_CAM", False)
-HEIGHT_BIG_IMAGE = 750
-WIDTH_BIG_IMAGE = 750
+USE_PICAM_MODULE = "ENABLE_PI_CAM" in os.environ
+CAM_PORT = int(os.environ.get("CAM_PORT", 0))
+HEIGHT_BIG_IMAGE = 650
+WIDTH_BIG_IMAGE = 650
 HEIGHT_SMALL_IMAGE_CONTAINER = 200
 WIDTH_SMALL_IMAGE_CONTAINER = 200
 SMALL_IMAGE_LENGTH = 175
@@ -27,9 +28,9 @@ SMALL_IMAGE_LENGTH = 175
 
 def setup() -> None:
     app_controller = DemoApplicationController(
-        cam_port=int(environ.get("CAM_PORT", 0)),
+        cam_port=CAM_PORT,
         placeholder_image_file=PLACEHOLDER_IMAGE,
-        use_picam=USE_RASPBERRY_CAMERA_MODULE,
+        use_picam=USE_PICAM_MODULE,
     )
     basic_processor = BasicProcessor(target_image_size=(800, 800))
     calibration_processor = CalibrationProcessor(target_image_size=(800, 800))
@@ -37,7 +38,7 @@ def setup() -> None:
         target_image_size=(800, 800),
         inference_image_size=(128, 128),
         model_file=Path(__file__).parents[2]
-        / "src/anomaly_detection/model_checkpoints/cookie/model.pt",
+        / "src/anomaly_detection/model_checkpoints/cookie/ad_model.pt",
     )
 
     def _header() -> None:
@@ -69,11 +70,12 @@ def setup() -> None:
         """
         _header()
 
-        result_image = (
-            ui.interactive_image()
-            .classes(f"w-[{WIDTH_BIG_IMAGE}]px] h-[{HEIGHT_BIG_IMAGE}px]")
-            .style("object-fit: contain")
-        )
+        with ui.column().classes("w-full items-center"):
+            result_image = (
+                ui.interactive_image()
+                .classes(f"w-[{WIDTH_BIG_IMAGE}]px] h-[{HEIGHT_BIG_IMAGE}px]")
+                .style("object-fit: contain")
+            )
 
         def update_images(result: str) -> None:
             result_image.set_source(result)
@@ -87,7 +89,7 @@ def setup() -> None:
         """
         _header()
 
-        with ui.column().classes("w-full items-center mt-10"):
+        with ui.column().classes("w-full items-center"):
             result_image = (
                 ui.interactive_image()
                 .classes(f"w-[{WIDTH_BIG_IMAGE}]px] h-[{HEIGHT_BIG_IMAGE}px]")
@@ -106,18 +108,22 @@ def setup() -> None:
         """
         _header()
 
-        with ui.column().classes("w-full items-center mt-1"):
-            with ui.row().classes("w-full justify-center gap-20"):
-                residuals_image = (
-                    ui.interactive_image()
-                    .classes(f"w-[{WIDTH_BIG_IMAGE}]px] h-[{HEIGHT_BIG_IMAGE}px]")
-                    .style("object-fit: contain")
-                )
-                result_image = (
-                    ui.interactive_image()
-                    .classes(f"w-[{WIDTH_BIG_IMAGE}]px] h-[{HEIGHT_BIG_IMAGE}px]")
-                    .style("object-fit: contain")
-                )
+        with ui.column().classes("w-full items-center"):
+            with ui.row().classes("w-full justify-center gap-6"):
+                with ui.element("div").classes(
+                    "bg-blue-700 text-blue-100 rounded-full text-xl font-medium px-2.5 py-0.5"
+                ) as condition_frame:
+                    condition_text = ui.label()
+
+            with ui.row().classes("w-full justify-center gap-6"):
+                with ui.column().classes("items-center justify-center gap-6"):
+                    residuals_image = ui.interactive_image().classes(
+                        f"w-[{WIDTH_BIG_IMAGE}]px] h-[{HEIGHT_BIG_IMAGE}px]"
+                    )
+                with ui.column().classes("items-center justify-center gap-6"):
+                    result_image = ui.interactive_image().classes(
+                        f"w-[{WIDTH_BIG_IMAGE}]px] h-[{HEIGHT_BIG_IMAGE}px]"
+                    )
 
             with ui.row().classes("w-full items-center justify-center gap-6 mt-1"):
                 with ui.column().classes(
@@ -220,9 +226,26 @@ def setup() -> None:
                         "text-align: center; width: 100%; font-weight: bold; color: white;"
                     )
 
-        def update_images(result: dict[str, str] | str) -> None:
+        def update_images(result: dict[str, str | bool] | str) -> None:
             def get_image(key: str) -> str:
-                return result if isinstance(result, str) else result[key]
+                if isinstance(result, str):
+                    return result
+                value = result[key]
+                if not isinstance(value, str):
+                    raise ValueError("Not an base64 encoded image.")
+                return value
+
+            def display_condition() -> None:
+                frame_template = "bg-{0}-700 text-{0}-100 rounded-full text-xl font-medium px-2.5 py-0.5"
+                if isinstance(result, str):
+                    condition_frame.classes(replace=frame_template.format("blue"))
+                    condition_text.set_text("Unbekannt")
+                elif result["damaged"]:
+                    condition_frame.classes(replace=frame_template.format("red"))
+                    condition_text.set_text("Beschädigt")
+                else:
+                    condition_frame.classes(replace=frame_template.format("green"))
+                    condition_text.set_text("Unbeschädigt")
 
             result_image.set_source(get_image("superimposed"))
             original_image.set_source(get_image("original"))
@@ -231,6 +254,7 @@ def setup() -> None:
             residuals_image.set_source(get_image("residuals"))
             mini_residuals_image.set_source(get_image("residuals"))
             result_mini_image.set_source(get_image("superimposed"))
+            display_condition()
 
         await app_controller.set_handler(anomaly_detector_processor, update_images)
 
@@ -239,4 +263,4 @@ def setup() -> None:
 
 
 app.on_startup(setup)
-ui.run(reload=True, show=False)
+ui.run(title="CookieAdDemo", favicon="🍪")
