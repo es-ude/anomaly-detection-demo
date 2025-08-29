@@ -19,8 +19,9 @@ ENCODER_VISUALIZATION = BASE_PATH / "assets" / "darstellung_encoder_decoder_weiÃ
 
 USE_PICAM_MODULE = "ENABLE_PI_CAM" in os.environ
 CAM_PORT = int(os.environ.get("CAM_PORT", 0))
-HEIGHT_BIG_IMAGE = 650
-WIDTH_BIG_IMAGE = 650
+SHOW_CLASSIFICATION_BADGE = "SHOW_CLASSIFICATION_BADGE" in os.environ
+HEIGHT_BIG_IMAGE = 700
+WIDTH_BIG_IMAGE = 700
 HEIGHT_SMALL_IMAGE_CONTAINER = 200
 WIDTH_SMALL_IMAGE_CONTAINER = 200
 SMALL_IMAGE_LENGTH = 175
@@ -109,7 +110,10 @@ def setup() -> None:
         _header()
 
         with ui.column().classes("w-full items-center"):
-            with ui.row().classes("w-full justify-center gap-6"):
+            with ui.row().classes(
+                "w-full justify-center gap-6"
+                + ("" if SHOW_CLASSIFICATION_BADGE else " collapse")
+            ):
                 with ui.element("div").classes(
                     "bg-blue-700 text-blue-100 rounded-full text-xl font-medium px-2.5 py-0.5"
                 ) as condition_frame:
