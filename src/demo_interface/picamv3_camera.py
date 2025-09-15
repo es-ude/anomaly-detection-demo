@@ -6,7 +6,7 @@ class Camera:
     def __init__(self, cam_port: int | str, width: int = 1920, height: int = 1080):
         self.camera = Picamera2(camera_num=cam_port)
         self.config = self.camera.create_video_configuration(
-            main={"size": (width, height), "format": "RGB888"}
+            main={"size": (width, height), "format": "BGR888"}
         )
         self.camera.configure(self.config)
         self.camera.start()
