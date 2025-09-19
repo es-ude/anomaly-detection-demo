@@ -1,5 +1,5 @@
-from os import environ
 import asyncio
+from os import environ
 from pathlib import Path
 
 from nicegui import app, ui
@@ -239,4 +239,4 @@ def setup() -> None:
 
 
 app.on_startup(setup)
-ui.run()
+ui.run(reload=True, show=False)
