@@ -1,11 +1,9 @@
 import marimo
 
-__generated_with = "0.15.0"
+__generated_with = "0.18.4"
 app = marimo.App(width="medium")
 
-
-@app.cell
-def _():
+with app.setup:
     import os
     from functools import partial
     from pathlib import Path
@@ -21,22 +19,10 @@ def _():
     DATASET_DIR = Path(os.environ["COOKIE_CLF_DATASET_DIR"])
     CKPT_DIR = Path(os.environ["COOKIE_CKPT_DIR"])
     AD_MODEL_FILE = CKPT_DIR / "ad_model.pt"
-    return (
-        AD_MODEL_FILE,
-        CookieAdModel,
-        CookieClfDataset,
-        DATASET_DIR,
-        InferencePreprocessing,
-        load_model,
-        os,
-        partial,
-        plt,
-        torch,
-    )
 
 
 @app.cell
-def _(CookieClfDataset, DATASET_DIR, InferencePreprocessing, os, partial):
+def _():
     create_ds = partial(
         CookieClfDataset,
         dataset_dir=DATASET_DIR,
@@ -50,7 +36,7 @@ def _(CookieClfDataset, DATASET_DIR, InferencePreprocessing, os, partial):
 
 
 @app.cell
-def _(AD_MODEL_FILE, CookieAdModel, load_model):
+def _():
     ad_model = CookieAdModel()
     load_model(ad_model, AD_MODEL_FILE)
     _ = ad_model.eval()
@@ -58,7 +44,7 @@ def _(AD_MODEL_FILE, CookieAdModel, load_model):
 
 
 @app.cell
-def _(ad_model, ds_train, torch):
+def _(ad_model, ds_train):
     images, labels = ds_train[:]
 
     with torch.no_grad():
@@ -71,11 +57,11 @@ def _(ad_model, ds_train, torch):
 
 
 @app.cell
-def _(images, plt, reconstructed_images):
+def _(images, reconstructed_images):
     def plot_reconstructed(img_idx: int) -> plt.Figure:
         fig, axs = plt.subplots(nrows=1, ncols=2)
-        axs[0].imshow(images[img_idx], cmap="gray")
-        axs[1].imshow(reconstructed_images[img_idx], cmap="gray")
+        axs[0].imshow(images[img_idx], vmin=0, vmax=1, cmap="gray")
+        axs[1].imshow(reconstructed_images[img_idx], vmin=0, vmax=1, cmap="gray")
         return fig
 
     plot_reconstructed(123)

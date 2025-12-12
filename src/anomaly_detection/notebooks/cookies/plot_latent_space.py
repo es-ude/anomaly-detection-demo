@@ -1,11 +1,9 @@
 import marimo
 
-__generated_with = "0.15.0"
+__generated_with = "0.18.4"
 app = marimo.App(width="medium")
 
-
-@app.cell
-def imports():
+with app.setup:
     import marimo as mo
 
     import os
@@ -24,30 +22,10 @@ def imports():
     DATASET_DIR = Path(os.environ["COOKIE_CLF_DATASET_DIR"])
     CKPT_DIR = Path(os.environ["COOKIE_CKPT_DIR"])
     AE_MODEL_FILE = CKPT_DIR / "ae_model.pt"
-    return (
-        AE_MODEL_FILE,
-        Autoencoder,
-        CookieClfDataset,
-        DATASET_DIR,
-        InferencePreprocessing,
-        PCA,
-        load_model,
-        mo,
-        os,
-        partial,
-        px,
-        torch,
-    )
 
 
 @app.cell
-def dataset_loading(
-    CookieClfDataset,
-    DATASET_DIR,
-    InferencePreprocessing,
-    os,
-    partial,
-):
+def dataset_loading():
     create_ds = partial(
         CookieClfDataset,
         dataset_dir=DATASET_DIR,
@@ -61,7 +39,7 @@ def dataset_loading(
 
 
 @app.cell
-def ae_loading(AE_MODEL_FILE, Autoencoder, load_model):
+def ae_loading():
     autoencoder = Autoencoder()
     load_model(autoencoder, AE_MODEL_FILE)
     _ = autoencoder.eval()
@@ -69,7 +47,7 @@ def ae_loading(AE_MODEL_FILE, Autoencoder, load_model):
 
 
 @app.cell
-def latent_space(PCA, autoencoder, ds_train, mo, px, torch):
+def latent_space(autoencoder, ds_train):
     images, labels = ds_train[:]
 
     with torch.no_grad():
