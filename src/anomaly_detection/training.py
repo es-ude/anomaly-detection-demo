@@ -44,7 +44,7 @@ def train_autoencoder(
             original_input = original_input.to(device)
 
             model.zero_grad()
-            reconstructed = model(augmented_input)
+            _, reconstructed = model(augmented_input)
             loss = loss_fn(reconstructed, original_input)
             loss.backward()
             optimizer.step()
@@ -60,7 +60,7 @@ def train_autoencoder(
             for input, _ in dl_test:
                 input = input.to(device)
 
-                reconstructed = model(input)
+                _, reconstructed = model(input)
                 loss = loss_fn(reconstructed, input)
                 running_loss += loss.item() * (len(input) / num_samples_test)
 

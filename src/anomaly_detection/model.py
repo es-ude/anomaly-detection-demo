@@ -28,10 +28,10 @@ class Autoencoder(torch.nn.Module):
         self.encoder = Encoder()
         self.decoder = Decoder()
 
-    def forward(self, input: torch.Tensor) -> torch.Tensor:
+    def forward(self, input: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
         encoded = self.encoder(input)
         decoded = self.decoder(encoded)
-        return decoded
+        return encoded, decoded
 
 
 def _conv_block(in_channels: int, out_channels: int) -> list[torch.nn.Module]:
