@@ -9,7 +9,7 @@ from torch.utils.data import Dataset
 
 CLASSES = ("good", "damaged")
 
-Transformation = Callable[[torch.Tensor], torch.Tensor]
+type Transformation = Callable[[torch.Tensor], torch.Tensor]
 
 
 class CookieClfDataset(Dataset):

@@ -11,7 +11,7 @@ from src.anomaly_detection.anomaly_detector import DetectionResult
 from src.demo_interface.image import Image, convert_rgb_to_bgr
 from src.demo_interface.image_processing import ImageProcessor
 
-UpdateUICallback = Callable[[dict[str, str]], None] | Callable[[str], None]
+type UpdateUICallback = Callable[[dict[str, str]], None] | Callable[[str], None]
 
 
 class _NoneImageProcessor:

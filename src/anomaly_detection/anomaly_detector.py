@@ -10,7 +10,7 @@ from src.anomaly_detection.model import CookieAdModel
 from src.anomaly_detection.persistence import load_model
 from src.anomaly_detection.preprocessing import InferencePreprocessing
 
-Image = cv2.typing.MatLike
+type Image = cv2.typing.MatLike
 
 
 @dataclass

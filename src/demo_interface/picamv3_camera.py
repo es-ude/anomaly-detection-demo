@@ -1,4 +1,5 @@
 from picamera2 import Picamera2
+
 from src.demo_interface.image import Image
 
 
