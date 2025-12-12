@@ -11,20 +11,26 @@ from src.demo_interface.image_processing import (
     CalibrationProcessor,
 )
 
-BASE_PATH = Path(__file__).parent
-ZAKID_LOGO = BASE_PATH / "assets" / "zakid_logo_weiß.svg"
-UDE_LOGO = BASE_PATH / "assets" / "logo_ude_weiß_transparent.svg"
-PLACEHOLDER_IMAGE = BASE_PATH / "assets" / "placeholder_2.png"
-ENCODER_VISUALIZATION = BASE_PATH / "assets" / "darstellung_encoder_decoder_weiß.png"
+ASSETS_DIR = Path(__file__).parent / "assets"
+ZAKID_LOGO = ASSETS_DIR / "zakid_logo_weiß.svg"
+UDE_LOGO = ASSETS_DIR / "logo_ude_weiß_transparent.svg"
+PLACEHOLDER_IMAGE = ASSETS_DIR / "placeholder_2.png"
+ENCODER_VISUALIZATION = ASSETS_DIR / "darstellung_encoder_decoder_weiß.png"
 
-USE_PICAM_MODULE = "ENABLE_PI_CAM" in os.environ
-CAM_PORT = int(os.environ.get("CAM_PORT", 0))
-SHOW_CLASSIFICATION_BADGE = "SHOW_CLASSIFICATION_BADGE" in os.environ
 HEIGHT_BIG_IMAGE = 700
 WIDTH_BIG_IMAGE = 700
 HEIGHT_SMALL_IMAGE_CONTAINER = 200
 WIDTH_SMALL_IMAGE_CONTAINER = 200
 SMALL_IMAGE_LENGTH = 175
+
+USE_PICAM_MODULE = "ENABLE_PI_CAM" in os.environ
+CAM_PORT = int(os.environ.get("CAM_PORT", 0))
+IMAGE_WIDTH = int(os.environ["IMAGE_WIDTH"])
+IMAGE_HEIGHT = int(os.environ["IMAGE_HEIGHT"])
+
+AE_MODEL_CKPT = Path(os.environ["COOKIE_CKPT_DIR"]) / "ae_model.pt"
+CLF_MODEL_CKPT = Path(os.environ["COOKIE_CKPT_DIR"]) / "clf_model.pt"
+USE_CLASSIFIER = "USE_CLASSIFIER" in os.environ
 
 
 def setup() -> None:
@@ -36,10 +42,10 @@ def setup() -> None:
     basic_processor = BasicProcessor(target_image_size=(800, 800))
     calibration_processor = CalibrationProcessor(target_image_size=(800, 800))
     anomaly_detector_processor = AnomalyDetectorProcessor(
+        autoencoder_file=AE_MODEL_CKPT,
+        classifier_file=CLF_MODEL_CKPT if USE_CLASSIFIER else None,
         target_image_size=(800, 800),
-        inference_image_size=(128, 128),
-        model_file=Path(__file__).parents[2]
-        / "src/anomaly_detection/model_checkpoints/cookie/ad_model.pt",
+        inference_image_size=(IMAGE_HEIGHT, IMAGE_WIDTH),
     )
 
     def _header() -> None:
@@ -111,8 +117,7 @@ def setup() -> None:
 
         with ui.column().classes("w-full items-center"):
             with ui.row().classes(
-                "w-full justify-center gap-6"
-                + ("" if SHOW_CLASSIFICATION_BADGE else " collapse")
+                "w-full justify-center gap-6" + ("" if USE_CLASSIFIER else " collapse")
             ):
                 with ui.element("div").classes(
                     "bg-blue-700 text-blue-100 rounded-full text-xl font-medium px-2.5 py-0.5"

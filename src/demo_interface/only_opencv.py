@@ -1,3 +1,4 @@
+import os
 from dataclasses import fields
 from pathlib import Path
 
@@ -6,6 +7,10 @@ import numpy as np
 from camera import Camera
 
 from src.demo_interface.image_processing import AnomalyDetectorProcessor
+
+AE_MODEL_FILE = Path(os.environ["COOKIE_CKPT_DIR"]) / "ae_model.pt"
+IMAGE_WIDTH = int(os.environ["IMAGE_WIDTH"])
+IMAGE_HEIGHT = int(os.environ["IMAGE_HEIGHT"])
 
 
 def bytes_to_cv2_image(byte_data: bytes) -> np.ndarray:
@@ -16,10 +21,10 @@ def bytes_to_cv2_image(byte_data: bytes) -> np.ndarray:
 
 cam = Camera(cam_port=0)
 anomaly_detector_processor = AnomalyDetectorProcessor(
-    model_file=Path(__file__).parents[2]
-    / "src/anomaly_detection/model_checkpoints/cookie/model.pt",
+    autoencoder_file=AE_MODEL_FILE,
+    classifier_file=None,
     target_image_size=(800, 800),
-    inference_image_size=(128, 128),
+    inference_image_size=(IMAGE_HEIGHT, IMAGE_WIDTH),
 )
 
 while True:

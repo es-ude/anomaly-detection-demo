@@ -12,19 +12,16 @@ from src.anomaly_detection.anomaly_detector import AnomalyDetector, DetectionRes
 IMAGE_WIDTH = int(os.environ["IMAGE_WIDTH"])
 IMAGE_HEIGHT = int(os.environ["IMAGE_HEIGHT"])
 DEVICE = torch.device(os.environ["DEVICE"])
-
 CKPT_DIR = Path(os.environ["COOKIE_CKPT_DIR"])
-MODEL_FILE_NAME = os.environ["MODEL_FILE_NAME"]
-
-DATASET_DIR = Path(os.environ["COOKIE_AE_DATASET_DIR"])
-IMAGE_PATH = DATASET_DIR / "test" / "bad"
+IMAGE_PATH = Path(os.environ["COOKIE_AE_DATASET_DIR"]) / "test" / "bad"
 
 
 def main() -> None:
     all_images = list(IMAGE_PATH.glob("*.jpg"))
 
     anomaly_detector = AnomalyDetector(
-        model_file=CKPT_DIR / MODEL_FILE_NAME,
+        autoencoder_file=CKPT_DIR / "ae_model.pt",
+        classifier_file=CKPT_DIR / "clf_model.pt",
         input_image_size=(800, 800),
         inference_image_size=(IMAGE_WIDTH, IMAGE_HEIGHT),
         device=DEVICE,
@@ -34,6 +31,7 @@ def main() -> None:
     image = _load_image(all_images[0])
     result = anomaly_detector.detect(image)
 
+    print("Damaged:", result.damaged)
     _plot(result)
 
 

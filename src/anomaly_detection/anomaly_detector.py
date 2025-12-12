@@ -1,12 +1,13 @@
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Optional
 
 import cv2
 import numpy as np
 import torch
 import torchvision.transforms.v2.functional as tv_func
 
-from src.anomaly_detection.model import CookieAdModel
+from src.anomaly_detection.model import Autoencoder, Classifier
 from src.anomaly_detection.persistence import load_model
 from src.anomaly_detection.preprocessing import InferencePreprocessing
 
@@ -20,32 +21,39 @@ class DetectionResult:
     reconstructed: Image
     residuals: Image
     superimposed: Image
-    damaged: bool
+    damaged: Optional[bool]
 
 
 class AnomalyDetector:
     def __init__(
         self,
-        model_file: Path,
+        autoencoder_file: Path,
+        classifier_file: Optional[Path],
         input_image_size: tuple[int, int],
         inference_image_size: tuple[int, int],
         device: torch.device = torch.device("cpu"),
     ) -> None:
-        self.model_file = model_file
+        self.autoencoder_file = autoencoder_file
+        self.classifier_file = classifier_file
         self.input_image_size = input_image_size
         self.inference_image_size = inference_image_size
         self.device = device
-        self._model = None
+        self._autoencoder = None
+        self._classifier = None
         self._preprocessing = InferencePreprocessing(*inference_image_size)
 
     def load_model(self) -> None:
-        self._model = CookieAdModel()
-        load_model(self._model, self.model_file)
-        self._model.eval()
-        self._model.to(self.device)
+        self._autoencoder = Autoencoder()
+        load_model(self._autoencoder, self.autoencoder_file)
+        self._autoencoder.eval().to(self.device)
+
+        if self.classifier_file is not None:
+            self._classifier = Classifier()
+            load_model(self._classifier, self.classifier_file)
+            self._classifier.eval().to(self.device)
 
     def detect(self, image: Image) -> DetectionResult:
-        if self._model is None:
+        if self._autoencoder is None:
             self.load_model()
 
         preprocessed = self._preprocessing(image)
@@ -58,21 +66,31 @@ class AnomalyDetector:
             reconstructed=_to_rgb(_to_numpy(reconstructed)),
             residuals=_apply_colormap(_to_numpy(residuals)),
             superimposed=_superimpose(image, _to_numpy(resized_residuals)),
-            damaged=int(prediction.item()) == 1,
+            damaged=int(prediction.item()) == 1 if prediction is not None else None,
         )
 
     def _perform_inference(
         self, image: torch.Tensor
-    ) -> tuple[torch.Tensor, torch.Tensor]:
-        if self._model is None:
-            raise RuntimeError("Model not loaded. Call load_model() first.")
+    ) -> tuple[torch.Tensor, Optional[torch.Tensor]]:
+        if self._autoencoder is None:
+            raise RuntimeError("Autoencoder not loaded. Call load_model() first.")
 
         image = image.to(self.device)
+
         with torch.no_grad():
-            reconstructed, prediction = self._model(image)
+            encoded, reconstructed = self._autoencoder(image)
             reconstructed = reconstructed.clamp(min=0, max=1)
-            prediction = prediction.argmax(dim=-1)
-        return reconstructed.cpu(), prediction.cpu()
+
+            prediction = None
+
+            if self._classifier is not None:
+                prediction = self._classifier(encoded)
+                prediction = prediction.argmax(dim=-1)
+                prediction = prediction.cpu()
+
+            reconstructed = reconstructed.cpu()
+
+        return reconstructed, prediction
 
     def _resize_residuals(self, residuals: torch.Tensor) -> torch.Tensor:
         return tv_func.resize(
