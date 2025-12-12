@@ -13,7 +13,6 @@ class _BasePreprocessing(transforms.Compose):
             [
                 transforms.ToImage(),
                 transforms.Grayscale(num_output_channels=1),
-                # transforms.functional.autocontrast,
                 transforms.Resize((target_img_height, target_img_width)),
                 *augmentations,
                 transforms.ToDtype(dtype=torch.float32, scale=True),
@@ -22,11 +21,14 @@ class _BasePreprocessing(transforms.Compose):
 
 
 class TrainingPreprocessing(_BasePreprocessing):
-    def __init__(self, target_img_height: int, target_img_width: int) -> None:
+    def __init__(
+        self, target_img_height: int, target_img_width: int, brightness: float = 0.5
+    ) -> None:
         super().__init__(
             target_img_height,
             target_img_width,
             [
+                transforms.ColorJitter(brightness=brightness),
                 transforms.RandomHorizontalFlip(),
                 transforms.RandomVerticalFlip(),
             ],
