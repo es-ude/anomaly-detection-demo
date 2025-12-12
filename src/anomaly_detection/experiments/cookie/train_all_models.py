@@ -28,8 +28,8 @@ def main() -> None:
         model=autoencoder,
         ds_train=ds_train,
         ds_test=ds_val,
-        batch_size=32,
-        epochs=7000,
+        batch_size=64,
+        epochs=3000,
         learning_rate=1e-3,
         weight_decay=0,
         augment_input_image=RandomErasing(p=1, scale=(0.25, 0.25), value="random"),  # type: ignore
