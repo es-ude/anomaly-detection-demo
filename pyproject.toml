@@ -8,7 +8,7 @@ authors = [
     { name = "Florian Hettstedt", email = "florian.hettstedt@uni-due.de"},
     { name = "David P. Federl", email = "david-peter.federl@uni-due.de"}
 ]
-requires-python = ">=3.11"
+requires-python = ">=3.13"
 dependencies = [
     "ipywidgets>=8.1.5",
     "jupyterlab>=4.3.5",
