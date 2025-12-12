@@ -76,7 +76,8 @@ def train_autoencoder(
 
 
 def train_classifier(
-    model: torch.nn.Module,
+    classifier: torch.nn.Module,
+    encoder: torch.nn.Module,
     ds_train: Dataset,
     ds_test: Dataset,
     batch_size: int,
@@ -92,21 +93,26 @@ def train_classifier(
     dl_test = data_loader(ds_test, shuffle=False)
 
     loss_fn = torch.nn.CrossEntropyLoss()
-    optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
+    optimizer = torch.optim.Adam(classifier.parameters(), lr=learning_rate)
 
-    model.to(device)
+    classifier.to(device)
+    encoder.to(device).eval()
+
+    def encode(x: torch.Tensor) -> torch.Tensor:
+        with torch.no_grad():
+            return encoder(samples)
 
     for epoch in range(1, epochs + 1):
         history["epoch"].append(epoch)
 
-        model.train()
+        classifier.train()
         running_loss = 0.0
 
         for samples, labels in dl_train:
-            samples = samples.to(device)
+            samples = encode(samples.to(device))
 
-            model.zero_grad()
-            predicted = model(samples)
+            classifier.zero_grad()
+            predicted = classifier(samples)
             loss = loss_fn(predicted, labels)
             loss.backward()
             optimizer.step()
@@ -114,14 +120,14 @@ def train_classifier(
 
         history["train_loss"].append(running_loss / len(dl_train))
 
-        model.eval()
+        classifier.eval()
         running_loss = 0.0
 
         with torch.no_grad():
             for samples, labels in dl_test:
-                samples = samples.to(device)
+                samples = encode(samples.to(device))
 
-                predicted = model(samples)
+                predicted = classifier(samples)
                 loss = loss_fn(predicted, labels)
                 running_loss += loss.item()
 

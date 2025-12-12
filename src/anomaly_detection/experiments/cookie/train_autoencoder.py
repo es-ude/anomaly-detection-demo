@@ -21,17 +21,17 @@ def main() -> None:
     model = Autoencoder()
     summary(model, input_size=(1, defs.IMAGE_HEIGHT, defs.IMAGE_WIDTH), device="cpu")
 
-    ds_train, ds_test = _autoencoder_datasets()
+    ds_train, ds_val = _autoencoder_datasets()
 
     history = train_autoencoder(
         model=model,
         ds_train=ds_train,
-        ds_test=ds_test,
+        ds_test=ds_val,
         batch_size=32,
         epochs=7000,
         learning_rate=1e-3,
         weight_decay=0,
-        augment_input_image=RandomErasing(p=1, scale=(0.25, 0.25), value="random"),
+        augment_input_image=RandomErasing(p=1, scale=(0.25, 0.25), value="random"),  # type: ignore
         num_workers=defs.NUM_WORKERS,
         device=defs.DEVICE,
     )
