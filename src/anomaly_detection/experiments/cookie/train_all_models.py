@@ -28,7 +28,7 @@ def main() -> None:
         model=autoencoder,
         ds_train=ds_train,
         ds_test=ds_val,
-        batch_size=64,
+        batch_size=32,
         epochs=3000,
         learning_rate=1e-3,
         weight_decay=0,
