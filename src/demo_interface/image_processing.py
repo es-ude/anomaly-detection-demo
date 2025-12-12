@@ -66,7 +66,6 @@ class AnomalyDetectorProcessor(_BaseImageProcessor):
         self.anomaly_detector = AnomalyDetector(
             autoencoder_file=autoencoder_file,
             classifier_file=classifier_file,
-            input_image_size=self.target_image_size,
             inference_image_size=inference_image_size,
             device=torch.device("cpu"),
         )

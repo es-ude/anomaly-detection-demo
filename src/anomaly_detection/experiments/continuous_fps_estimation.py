@@ -1,45 +1,41 @@
 import os
+from pathlib import Path
 from time import time_ns
 
 import numpy as np
 import numpy.typing as npt
 import torch
 
-from src.anomaly_detection.model import Autoencoder
-from src.anomaly_detection.preprocessing import InferencePreprocessing
+from src.anomaly_detection.anomaly_detector import AnomalyDetector
 
 BATCH_SIZE = 100
 IMAGE_WIDTH = int(os.environ["IMAGE_WIDTH"])
 IMAGE_HEIGHT = int(os.environ["IMAGE_HEIGHT"])
 DEVICE = torch.device(os.environ["DEVICE"])
+CKPT_DIR = Path(os.environ["COOKIE_CKPT_DIR"])
 
 
 def main() -> None:
-    model = _get_compiled_model()
-    preprocess = InferencePreprocessing(IMAGE_WIDTH, IMAGE_HEIGHT)
+    model = _get_model()
 
     while True:
         start_time = time_ns()
 
         for _ in range(BATCH_SIZE):
-            image = _get_image()
-            image = preprocess(image)
-
-            with torch.no_grad():
-                image = image.to(DEVICE)
-                _ = model(image)
+            _ = model.detect(_get_image())
 
         end_time = time_ns()
 
         print(f"{BATCH_SIZE * 1e9 / (end_time - start_time):.02f} FPS")
 
 
-def _get_model() -> Autoencoder:
-    return Autoencoder().eval().to(DEVICE)
-
-
-def _get_compiled_model() -> torch.nn.Module:
-    return torch.compile(_get_model(), backend="aot_eager")
+def _get_model() -> AnomalyDetector:
+    return AnomalyDetector(
+        autoencoder_file=CKPT_DIR / "ae_model.pt",
+        classifier_file=CKPT_DIR / "clf_model.pt",
+        inference_image_size=(IMAGE_WIDTH, IMAGE_HEIGHT),
+        device=DEVICE,
+    )
 
 
 def _get_image() -> npt.NDArray[np.uint8]:

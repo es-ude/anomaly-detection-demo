@@ -29,13 +29,11 @@ class AnomalyDetector:
         self,
         autoencoder_file: Path,
         classifier_file: Optional[Path],
-        input_image_size: tuple[int, int],
         inference_image_size: tuple[int, int],
         device: torch.device = torch.device("cpu"),
     ) -> None:
         self.autoencoder_file = autoencoder_file
         self.classifier_file = classifier_file
-        self.input_image_size = input_image_size
         self.inference_image_size = inference_image_size
         self.device = device
         self._autoencoder = None
@@ -59,7 +57,7 @@ class AnomalyDetector:
         preprocessed = self._preprocessing(image)
         reconstructed, prediction = self._perform_inference(preprocessed)
         residuals = _compute_residuals(preprocessed, reconstructed)
-        resized_residuals = self._resize_residuals(residuals)
+        resized_residuals = _resize_residuals(residuals, size=image.shape)
         return DetectionResult(
             original=image,
             preprocessed=_to_rgb(_to_numpy(preprocessed)),
@@ -92,12 +90,11 @@ class AnomalyDetector:
 
         return reconstructed, prediction
 
-    def _resize_residuals(self, residuals: torch.Tensor) -> torch.Tensor:
-        return tv_func.resize(
-            residuals,
-            size=list(self.input_image_size),
-            interpolation=tv_func.InterpolationMode.BILINEAR,
-        )
+
+def _resize_residuals(residuals: torch.Tensor, size: tuple[int, ...]) -> torch.Tensor:
+    return tv_func.resize(
+        residuals, size=list(size), interpolation=tv_func.InterpolationMode.BILINEAR
+    )
 
 
 def _compute_residuals(
