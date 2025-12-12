@@ -10,7 +10,6 @@ authors = [
 ]
 requires-python = ">=3.11"
 dependencies = [
-    "ipykernel>=6.29.5",
     "ipywidgets>=8.1.5",
     "jupyterlab>=4.3.5",
     "marimo>=0.15.0",
@@ -21,8 +20,6 @@ dependencies = [
     "pandas>=2.2.3",
     "pillow>=11.1.0",
     "plotly>=6.3.0",
-    "pynvim>=0.5.2",
-    "requests>=2.32.3",
     "scikit-learn>=1.7.1",
     "torch>=2.6.0",
     "torchsummary>=1.5.1",
@@ -46,6 +43,8 @@ dev = [
     "python-lsp-server>=1.12.2",
     "rope>=1.13.0",
     "ruff>=0.9.7",
+    "pynvim>=0.5.2",
+    "ipykernel>=6.29.5",
 ]
 # rpi = [
 #     "picamera2>=0.3.27",
