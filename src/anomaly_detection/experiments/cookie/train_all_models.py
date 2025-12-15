@@ -46,7 +46,7 @@ def main() -> None:
         encoder=autoencoder.encoder,
         ds_train=ds_train,
         ds_test=ds_val,
-        batch_size=64,
+        batch_size=512,
         epochs=100,
         learning_rate=1e-3,
         num_workers=defs.NUM_WORKERS,
