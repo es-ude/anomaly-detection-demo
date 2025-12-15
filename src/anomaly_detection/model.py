@@ -34,6 +34,17 @@ class Autoencoder(torch.nn.Module):
         return encoded, decoded
 
 
+class Classifier(torch.nn.Sequential):
+    def __init__(self) -> None:
+        super().__init__(
+            torch.nn.Conv2d(
+                in_channels=128, out_channels=2, kernel_size=3, padding="same"
+            ),
+            torch.nn.MaxPool2d(kernel_size=8),
+            torch.nn.Flatten(start_dim=-3),
+        )
+
+
 def _conv_block(in_channels: int, out_channels: int) -> list[torch.nn.Module]:
     return [
         torch.nn.Conv2d(
@@ -78,14 +89,3 @@ def _deconv_block(in_channels: int, out_channels: int) -> list[torch.nn.Module]:
         ),
         torch.nn.ReLU(),
     ]
-
-
-class Classifier(torch.nn.Sequential):
-    def __init__(self) -> None:
-        super().__init__(
-            torch.nn.Conv2d(
-                in_channels=128, out_channels=2, kernel_size=3, padding="same"
-            ),
-            torch.nn.MaxPool2d(kernel_size=8),
-            torch.nn.Flatten(start_dim=-3),
-        )
