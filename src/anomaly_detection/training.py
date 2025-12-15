@@ -109,10 +109,11 @@ def train_classifier(
         running_loss = 0.0
 
         for samples, labels in dl_train:
-            samples = encode(samples.to(device))
+            samples, labels = samples.to(device), labels.to(device)
 
             classifier.zero_grad()
-            predicted = classifier(samples)
+            encoded_samples = encode(samples)
+            predicted = classifier(encoded_samples)
             loss = loss_fn(predicted, labels)
             loss.backward()
             optimizer.step()
@@ -125,9 +126,10 @@ def train_classifier(
 
         with torch.no_grad():
             for samples, labels in dl_test:
-                samples = encode(samples.to(device))
+                samples, labels = samples.to(device), labels.to(device)
 
-                predicted = classifier(samples)
+                encoded_samples = encode(samples)
+                predicted = classifier(encoded_samples)
                 loss = loss_fn(predicted, labels)
                 running_loss += loss.item()
 
