@@ -4,21 +4,23 @@ import torch
 class Encoder(torch.nn.Sequential):
     def __init__(self) -> None:
         super().__init__(
-            *_conv_block(in_channels=1, out_channels=32),  # 64
-            *_conv_block(in_channels=32, out_channels=64),  # 32
-            *_conv_block(in_channels=64, out_channels=128),  # 16
-            *_conv_block(in_channels=128, out_channels=128),  # 8
+            *_conv_block(in_channels=1, out_channels=32, stride=4),  # 128
+            *_conv_block(in_channels=32, out_channels=64),  # 64
+            *_conv_block(in_channels=64, out_channels=128),  # 32
+            *_conv_block(in_channels=128, out_channels=128),  # 16
         )
 
 
 class Decoder(torch.nn.Sequential):
     def __init__(self) -> None:
         super().__init__(
-            *_deconv_block(in_channels=128, out_channels=128),  # 16
-            *_deconv_block(in_channels=128, out_channels=64),  # 32
-            *_deconv_block(in_channels=64, out_channels=32),  # 64
-            *_deconv_block(in_channels=32, out_channels=32),  # 128
-            torch.nn.Conv2d(in_channels=32, out_channels=1, kernel_size=1),  # 128
+            *_deconv_block(in_channels=128, out_channels=128),  # 32
+            *_deconv_block(in_channels=128, out_channels=64),  # 64
+            *_deconv_block(in_channels=64, out_channels=32),  # 128
+            *_deconv_block(
+                in_channels=32, out_channels=32, stride=4, output_padding=3
+            ),  # 512
+            torch.nn.Conv2d(in_channels=32, out_channels=1, kernel_size=1),  # 512
         )
 
 
@@ -45,13 +47,15 @@ class Classifier(torch.nn.Sequential):
         )
 
 
-def _conv_block(in_channels: int, out_channels: int) -> list[torch.nn.Module]:
+def _conv_block(
+    in_channels: int, out_channels: int, stride: int = 2
+) -> list[torch.nn.Module]:
     return [
         torch.nn.Conv2d(
             in_channels=in_channels,
             out_channels=in_channels,
             kernel_size=5,
-            stride=2,
+            stride=stride,
             padding=2,
             groups=in_channels,
         ),
@@ -67,15 +71,17 @@ def _conv_block(in_channels: int, out_channels: int) -> list[torch.nn.Module]:
     ]
 
 
-def _deconv_block(in_channels: int, out_channels: int) -> list[torch.nn.Module]:
+def _deconv_block(
+    in_channels: int, out_channels: int, stride: int = 2, output_padding: int = 1
+) -> list[torch.nn.Module]:
     return [
         torch.nn.ConvTranspose2d(
             in_channels=in_channels,
             out_channels=in_channels,
             kernel_size=5,
-            stride=2,
+            stride=stride,
             padding=2,
-            output_padding=1,
+            output_padding=output_padding,
             groups=in_channels,
         ),
         torch.nn.ConvTranspose2d(
