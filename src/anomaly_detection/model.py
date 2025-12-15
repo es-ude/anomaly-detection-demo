@@ -4,8 +4,7 @@ import torch
 class Encoder(torch.nn.Sequential):
     def __init__(self) -> None:
         super().__init__(
-            *_conv_block(in_channels=1, out_channels=16),  # 256
-            *_conv_block(in_channels=16, out_channels=32),  # 128
+            *_conv_block(in_channels=1, out_channels=32),  # 256
             *_conv_block(in_channels=32, out_channels=64),  # 64
             *_conv_block(in_channels=64, out_channels=128),  # 32
             *_conv_block(in_channels=128, out_channels=128),  # 16
@@ -18,9 +17,8 @@ class Decoder(torch.nn.Sequential):
             *_deconv_block(in_channels=128, out_channels=128),  # 32
             *_deconv_block(in_channels=128, out_channels=64),  # 64
             *_deconv_block(in_channels=64, out_channels=32),  # 128
-            *_deconv_block(in_channels=32, out_channels=16),  # 256
-            *_deconv_block(in_channels=16, out_channels=16),  # 512
-            torch.nn.Conv2d(in_channels=16, out_channels=1, kernel_size=1),  # 512
+            *_deconv_block(in_channels=32, out_channels=32),  # 256
+            torch.nn.Conv2d(in_channels=32, out_channels=1, kernel_size=1),  # 512
         )
 
 
@@ -39,9 +37,11 @@ class Autoencoder(torch.nn.Module):
 class Classifier(torch.nn.Sequential):
     def __init__(self) -> None:
         super().__init__(
+            torch.nn.Dropout(p=0.5),
             *_dwsep_conv(in_channels=128, out_channels=8, kernel_size=3),
             torch.nn.MaxPool2d(kernel_size=2),
             torch.nn.ReLU(),
+            torch.nn.Dropout(p=0.5),
             *_dwsep_conv(in_channels=8, out_channels=2, kernel_size=3),
             torch.nn.AdaptiveAvgPool2d(output_size=1),
             torch.nn.Flatten(start_dim=-3),
