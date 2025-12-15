@@ -100,7 +100,7 @@ def train_classifier(
 
     def encode(x: torch.Tensor) -> torch.Tensor:
         with torch.no_grad():
-            return encoder(samples)
+            return encoder(x)
 
     for epoch in range(1, epochs + 1):
         history["epoch"].append(epoch)
