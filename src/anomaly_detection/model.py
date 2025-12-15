@@ -39,12 +39,10 @@ class Autoencoder(torch.nn.Module):
 class Classifier(torch.nn.Sequential):
     def __init__(self) -> None:
         super().__init__(
-            *_dwsep_conv(
-                in_channels=128, out_channels=16, kernel_size=3, padding="same"
-            ),
+            *_dwsep_conv(in_channels=128, out_channels=8, kernel_size=3),
             torch.nn.MaxPool2d(kernel_size=2),
             torch.nn.ReLU(),
-            *_dwsep_conv(in_channels=16, out_channels=2, kernel_size=3, padding="same"),
+            *_dwsep_conv(in_channels=8, out_channels=2, kernel_size=3),
             torch.nn.AdaptiveAvgPool2d(output_size=1),
             torch.nn.Flatten(start_dim=-3),
         )
