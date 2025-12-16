@@ -40,7 +40,7 @@ class Classifier(torch.nn.Sequential):
     def __init__(self) -> None:
         super().__init__(
             torch.nn.Dropout(p=0.5),
-            *_dwsep_conv(in_channels=128, out_channels=8, kernel_size=3),
+            *_dwsep_conv(in_channels=32, out_channels=8, kernel_size=3),
             torch.nn.MaxPool2d(kernel_size=2),
             torch.nn.ReLU(),
             torch.nn.Dropout(p=0.5),
