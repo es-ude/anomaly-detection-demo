@@ -67,7 +67,7 @@ def _(ds_test, ds_train, model):
 
         for idx, (original, label) in enumerate(ds):
             with torch.no_grad():
-                reconstructed = model(original)
+                encoded, reconstructed = model(original)
                 loss = loss_fn(reconstructed, original)
 
                 data["set"].append(set_name)
@@ -94,7 +94,7 @@ def _(ds_test):
 def _(ds_test, img_idx, model):
     img_original, _ = cast(torch.Tensor, ds_test[img_idx.value])
     with torch.no_grad():
-        img_reconstr = cast(torch.Tensor, model(img_original))
+        img_reconstr = cast(torch.Tensor, model(img_original)[1])
 
     img_diff = (img_original - img_reconstr).abs()
 
