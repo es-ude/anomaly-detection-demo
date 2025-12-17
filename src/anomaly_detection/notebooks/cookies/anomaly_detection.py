@@ -16,6 +16,7 @@ with app.setup:
     import pandas as pd
     import torch
     import matplotlib.pyplot as plt
+    from sklearn.metrics import classification_report
 
     from src.anomaly_detection.datasets.cookie_ad import CookieAdDataset
     from src.anomaly_detection.model import Autoencoder
@@ -122,15 +123,13 @@ def _(ds_test, img_idx, model):
 
 @app.cell
 def _(df):
-    decision_boundary = df.loc[df["set"] == "train", "loss"].quantile(0.95)
+    decision_boundary = df.loc[df["set"] == "train", "loss"].quantile(0.9)
 
     df["prediction"] = 0
     df.loc[df["loss"] > decision_boundary, "prediction"] = 1
 
     df_test = df[df["set"] == "test"]
-
-    accuracy = sum(df_test["label"] == df_test["prediction"]) / len(df_test)
-    accuracy
+    print(classification_report(df_test["label"], df_test["prediction"], target_names=["good", "damaged"]))
     return decision_boundary, df_test
 
 
@@ -139,6 +138,11 @@ def _(decision_boundary, df_test):
     plt.hist(df_test[df_test["label"] == 0]["loss"], color="tab:green", alpha=0.8)
     plt.hist(df_test[df_test["label"] == 1]["loss"], color="tab:blue", alpha=0.8)
     plt.axvline(x=decision_boundary, color="r", linestyle="--")
+    return
+
+
+@app.cell
+def _():
     return
 
 
