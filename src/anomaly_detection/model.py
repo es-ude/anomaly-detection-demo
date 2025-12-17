@@ -15,7 +15,7 @@ class Encoder(torch.nn.Sequential):
 class Decoder(torch.nn.Sequential):
     def __init__(self) -> None:
         super().__init__(
-            torch.nn.Conv2d(in_channels=32, out_channels=8, kernel_size=1),  # 32
+            torch.nn.Conv2d(in_channels=8, out_channels=128, kernel_size=1),  # 32
             *_deconv_block(in_channels=128, out_channels=128),  # 64
             *_deconv_block(in_channels=128, out_channels=64),  # 128
             *_deconv_block(in_channels=64, out_channels=32),  # 256
