@@ -29,11 +29,16 @@ class Autoencoder(torch.nn.Module):
         super().__init__()
         self.encoder = Encoder()
         self.decoder = Decoder()
+        self.decision_boundary = self.register_buffer("decision_boundary", None)
 
     def forward(self, input: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
         encoded = self.encoder(input)
         decoded = self.decoder(encoded)
         return encoded, decoded
+
+    def determine_decision_boundary(self, calibration_data: torch.Tensor) -> None: ...
+
+    def classify(self, x: torch.Tensor) -> torch.Tensor: ...
 
 
 class Classifier(torch.nn.Sequential):

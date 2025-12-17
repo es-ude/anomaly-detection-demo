@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 
+from sklearn.metrics import classification_report
 from torch.utils.data import Dataset, random_split
 from torchsummary import summary
 from torchvision.transforms.v2 import RandomErasing
@@ -35,7 +36,13 @@ def main() -> None:
         num_workers=defs.NUM_WORKERS,
         device=defs.DEVICE,
     )
+    model.eval()
 
+    model.determine_decision_boundary(ds_train[:][0])
+
+    _write_classification_report(
+        model, ds_val, OUTPUT_DIR / "classification_report.txt"
+    )
     defs.save_model(model, OUTPUT_DIR / "ae_model.pt")
     defs.save_history(history, OUTPUT_DIR / "ae_history.csv")
 
@@ -48,6 +55,17 @@ def _autoencoder_datasets() -> tuple[Dataset, Dataset]:
         in_memory=True,
     )
     return tuple(random_split(ds, lengths=[0.8, 0.2]))  # type: ignore
+
+
+def _write_classification_report(
+    autoencoder: Autoencoder, ds: Dataset, report_file: Path
+) -> None:
+    samples, labels = ds[:]
+    predictions = autoencoder.classify(samples)
+    report = classification_report(
+        labels, predictions, target_names=["good", "damaged"]
+    )
+    report_file.write_text(str(report))
 
 
 if __name__ == "__main__":
