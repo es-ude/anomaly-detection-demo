@@ -8,14 +8,14 @@ class Encoder(torch.nn.Sequential):
             *_conv_block(in_channels=32, out_channels=64),  # 32
             *_conv_block(in_channels=64, out_channels=128),  # 16
             *_conv_block(in_channels=128, out_channels=128),  # 8
-            torch.nn.Conv2d(in_channels=128, out_channels=8, kernel_size=1),  # 8
+            # torch.nn.Conv2d(in_channels=128, out_channels=8, kernel_size=1),  # 8
         )
 
 
 class Decoder(torch.nn.Sequential):
     def __init__(self) -> None:
         super().__init__(
-            torch.nn.Conv2d(in_channels=8, out_channels=128, kernel_size=1),  # 8
+            # torch.nn.Conv2d(in_channels=8, out_channels=128, kernel_size=1),  # 8
             *_deconv_block(in_channels=128, out_channels=128),  # 16
             *_deconv_block(in_channels=128, out_channels=64),  # 32
             *_deconv_block(in_channels=64, out_channels=32),  # 64
@@ -40,7 +40,7 @@ class Classifier(torch.nn.Sequential):
     def __init__(self) -> None:
         super().__init__(
             torch.nn.Dropout(p=0.5),
-            *_dwsep_conv(in_channels=8, out_channels=4, kernel_size=3),
+            *_dwsep_conv(in_channels=128, out_channels=4, kernel_size=3),
             torch.nn.MaxPool2d(kernel_size=2),
             torch.nn.ReLU(),
             torch.nn.Dropout(p=0.5),
