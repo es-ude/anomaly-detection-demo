@@ -24,6 +24,9 @@ COOKIE_AE_DATASET_DIR=<absolute_path_to_dataset>/v2
 COOKIE_CLF_DATASET_DIR=<absolute_path_to_dataset>
 COOKIE_OUTPUT_DIR=<absolute_path_to_output_dir>/cookie
 COOKIE_CKPT_DIR=<absolute_path_to_project_dir>/src/anomaly_detection/model_checkpoints/cookie
+
+# ENABLE_PI_CAM=
+# USE_CLASSIFIER=
 ```
 
 ## Run Experiments
