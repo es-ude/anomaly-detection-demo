@@ -23,10 +23,9 @@ with app.setup:
     from src.anomaly_detection.preprocessing import InferencePreprocessing
 
     DATASET_DIR = Path(os.environ["COOKIE_AE_DATASET_DIR"])
-    OUTPUT_DIR = Path(os.environ["COOKIE_OUTPUT_DIR"])
-
-    MODEL_FILE = OUTPUT_DIR / "ae_model.pt"
-    HISTORY_FILE = OUTPUT_DIR / "ae_history.csv"
+    CKPT_DIR = Path(os.environ["COOKIE_CKPT_DIR"])
+    MODEL_FILE = CKPT_DIR / "ae_model.pt"
+    HISTORY_FILE = CKPT_DIR / "ae_history.csv"
 
 
 @app.cell
@@ -85,7 +84,7 @@ def _(ds_test, ds_train, model):
 
 @app.cell
 def _(ds_test):
-    img_idx = mo.ui.number(start=0, stop=len(ds_test), label="Image Index")
+    img_idx = mo.ui.number(start=0, stop=len(ds_test)-1, label="Image Index")
     img_idx
     return (img_idx,)
 
@@ -130,21 +129,16 @@ def _(df):
 
     df_test = df[df["set"] == "test"]
 
+    accuracy = sum(df_test["label"] == df_test["prediction"]) / len(df_test)
+    accuracy
+    return decision_boundary, df_test
+
+
+@app.cell
+def _(decision_boundary, df_test):
     plt.hist(df_test[df_test["label"] == 0]["loss"], color="tab:green", alpha=0.8)
     plt.hist(df_test[df_test["label"] == 1]["loss"], color="tab:blue", alpha=0.8)
     plt.axvline(x=decision_boundary, color="r", linestyle="--")
-    return (df_test,)
-
-
-@app.cell
-def _(df_test):
-    accuracy = sum(df_test["label"] == df_test["prediction"]) / len(df_test)
-    accuracy
-    return
-
-
-@app.cell
-def _():
     return
 
 

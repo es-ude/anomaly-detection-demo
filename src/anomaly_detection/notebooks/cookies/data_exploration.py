@@ -39,7 +39,7 @@ def _():
 
 @app.cell
 def _(ds_test):
-    img_idx = mo.ui.number(start=0, stop=len(ds_test), label="Image Index")
+    img_idx = mo.ui.number(start=0, stop=len(ds_test)-1, label="Image Index")
     img_idx
     return (img_idx,)
 
