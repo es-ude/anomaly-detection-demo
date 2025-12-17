@@ -4,23 +4,23 @@ import torch
 class Encoder(torch.nn.Sequential):
     def __init__(self) -> None:
         super().__init__(
-            *_conv_block(in_channels=1, out_channels=32),  # 256
-            *_conv_block(in_channels=32, out_channels=64),  # 128
-            *_conv_block(in_channels=64, out_channels=128),  # 64
-            *_conv_block(in_channels=128, out_channels=128),  # 32
-            torch.nn.Conv2d(in_channels=128, out_channels=8, kernel_size=1),  # 32
+            *_conv_block(in_channels=1, out_channels=32),  # 64
+            *_conv_block(in_channels=32, out_channels=64),  # 32
+            *_conv_block(in_channels=64, out_channels=128),  # 16
+            *_conv_block(in_channels=128, out_channels=128),  # 8
+            torch.nn.Conv2d(in_channels=128, out_channels=8, kernel_size=1),  # 8
         )
 
 
 class Decoder(torch.nn.Sequential):
     def __init__(self) -> None:
         super().__init__(
-            torch.nn.Conv2d(in_channels=8, out_channels=128, kernel_size=1),  # 32
-            *_deconv_block(in_channels=128, out_channels=128),  # 64
-            *_deconv_block(in_channels=128, out_channels=64),  # 128
-            *_deconv_block(in_channels=64, out_channels=32),  # 256
-            *_deconv_block(in_channels=32, out_channels=32),  # 512
-            torch.nn.Conv2d(in_channels=32, out_channels=1, kernel_size=1),  # 512
+            torch.nn.Conv2d(in_channels=8, out_channels=128, kernel_size=1),  # 8
+            *_deconv_block(in_channels=128, out_channels=128),  # 16
+            *_deconv_block(in_channels=128, out_channels=64),  # 32
+            *_deconv_block(in_channels=64, out_channels=32),  # 64
+            *_deconv_block(in_channels=32, out_channels=32),  # 128
+            torch.nn.Conv2d(in_channels=32, out_channels=1, kernel_size=1),  # 128
         )
 
 
