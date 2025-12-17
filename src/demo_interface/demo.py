@@ -235,7 +235,7 @@ def setup() -> None:
                         "text-align: center; width: 100%; font-weight: bold; color: white;"
                     )
 
-        def update_images(result: dict[str, str | bool] | str) -> None:
+        def update_images(result: dict[str, str | bool | None] | str) -> None:
             def get_image(key: str) -> str:
                 if isinstance(result, str):
                     return result
@@ -246,7 +246,7 @@ def setup() -> None:
 
             def display_condition() -> None:
                 frame_template = "bg-{0}-700 text-{0}-100 rounded-full text-xl font-medium px-2.5 py-0.5"
-                if isinstance(result, str):
+                if isinstance(result, str) or result["damaged"] is None:
                     condition_frame.classes(replace=frame_template.format("blue"))
                     condition_text.set_text("Unbekannt")
                 elif result["damaged"]:

@@ -59,7 +59,7 @@ class DemoApplicationController:
 
     def _frame_to_ui_data(
         self, frame: DetectionResult | Image | None
-    ) -> dict[str, str | bool] | str:
+    ) -> dict[str, str | bool | None] | str:
         if frame is None:
             return _image_to_string(self._placeholder_image)
         elif isinstance(frame, DetectionResult):
@@ -82,11 +82,13 @@ def _image_to_string(image: Image) -> str:
 
 def _detection_result_to_ui_data(
     detection_result: DetectionResult,
-) -> dict[str, str | bool]:
+) -> dict[str, str | bool | None]:
     ui_data = dict()
     for field in fields(detection_result):
         value = getattr(detection_result, field.name)
         ui_data[field.name] = (
-            value if isinstance(value, bool) else _image_to_string(value)
+            value
+            if value is None or isinstance(value, bool)
+            else _image_to_string(value)
         )
     return ui_data
