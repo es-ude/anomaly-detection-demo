@@ -22,7 +22,7 @@ def bytes_to_cv2_image(byte_data: bytes) -> np.ndarray:
 cam = Camera(cam_port=0)
 anomaly_detector_processor = AnomalyDetectorProcessor(
     autoencoder_file=AE_MODEL_FILE,
-    classifier_file=None,
+    use_classifier=False,
     target_image_size=(800, 800),
     inference_image_size=(IMAGE_HEIGHT, IMAGE_WIDTH),
 )

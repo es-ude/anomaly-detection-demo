@@ -7,7 +7,7 @@ import numpy as np
 import torch
 import torchvision.transforms.v2.functional as tv_func
 
-from src.anomaly_detection.model import Autoencoder, Classifier
+from src.anomaly_detection.model import Autoencoder
 from src.anomaly_detection.persistence import load_model
 from src.anomaly_detection.preprocessing import InferencePreprocessing
 
@@ -28,27 +28,21 @@ class AnomalyDetector:
     def __init__(
         self,
         autoencoder_file: Path,
-        classifier_file: Optional[Path],
+        use_classifier: bool,
         inference_image_size: tuple[int, int],
         device: torch.device = torch.device("cpu"),
     ) -> None:
         self.autoencoder_file = autoencoder_file
-        self.classifier_file = classifier_file
+        self.use_classifier = use_classifier
         self.inference_image_size = inference_image_size
         self.device = device
         self._autoencoder = None
-        self._classifier = None
         self._preprocessing = InferencePreprocessing(*inference_image_size)
 
     def load_model(self) -> None:
         self._autoencoder = Autoencoder()
         load_model(self._autoencoder, self.autoencoder_file)
         self._autoencoder.eval().to(self.device)
-
-        if self.classifier_file is not None:
-            self._classifier = Classifier()
-            load_model(self._classifier, self.classifier_file)
-            self._classifier.eval().to(self.device)
 
     def detect(self, image: Image) -> DetectionResult:
         if self._autoencoder is None:
@@ -76,17 +70,12 @@ class AnomalyDetector:
         image = image.to(self.device)
 
         with torch.no_grad():
-            encoded, reconstructed = self._autoencoder(image)
-            reconstructed = reconstructed.clamp(min=0, max=1)
+            _, reconstructed = self._autoencoder(image)
+            reconstructed = reconstructed.clamp(min=0, max=1).cpu()
 
-            prediction = None
-
-            if self._classifier is not None:
-                prediction = self._classifier(encoded)
-                prediction = prediction.argmax(dim=-1)
-                prediction = prediction.cpu()
-
-            reconstructed = reconstructed.cpu()
+            prediction = (
+                self._autoencoder.classify(image).cpu() if self.use_classifier else None
+            )
 
         return reconstructed, prediction
 

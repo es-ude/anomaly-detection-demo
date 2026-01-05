@@ -29,7 +29,6 @@ IMAGE_WIDTH = int(os.environ["IMAGE_WIDTH"])
 IMAGE_HEIGHT = int(os.environ["IMAGE_HEIGHT"])
 
 AE_MODEL_CKPT = Path(os.environ["COOKIE_CKPT_DIR"]) / "ae_model.pt"
-CLF_MODEL_CKPT = Path(os.environ["COOKIE_CKPT_DIR"]) / "clf_model.pt"
 USE_CLASSIFIER = "USE_CLASSIFIER" in os.environ
 
 
@@ -43,7 +42,7 @@ def setup() -> None:
     calibration_processor = CalibrationProcessor(target_image_size=(800, 800))
     anomaly_detector_processor = AnomalyDetectorProcessor(
         autoencoder_file=AE_MODEL_CKPT,
-        classifier_file=CLF_MODEL_CKPT if USE_CLASSIFIER else None,
+        use_classifier=USE_CLASSIFIER,
         target_image_size=(800, 800),
         inference_image_size=(IMAGE_HEIGHT, IMAGE_WIDTH),
     )

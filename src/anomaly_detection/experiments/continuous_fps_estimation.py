@@ -32,7 +32,7 @@ def main() -> None:
 def _get_model() -> AnomalyDetector:
     return AnomalyDetector(
         autoencoder_file=CKPT_DIR / "ae_model.pt",
-        classifier_file=CKPT_DIR / "clf_model.pt",
+        use_classifier=True,
         inference_image_size=(IMAGE_WIDTH, IMAGE_HEIGHT),
         device=DEVICE,
     )

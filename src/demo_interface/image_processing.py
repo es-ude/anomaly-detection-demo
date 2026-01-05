@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Optional, Protocol
+from typing import Protocol
 
 import cv2
 import torch
@@ -58,14 +58,14 @@ class AnomalyDetectorProcessor(_BaseImageProcessor):
     def __init__(
         self,
         autoencoder_file: Path,
-        classifier_file: Optional[Path],
+        use_classifier: bool,
         target_image_size: tuple[int, int],
         inference_image_size: tuple[int, int],
     ) -> None:
         super().__init__(target_image_size)
         self.anomaly_detector = AnomalyDetector(
             autoencoder_file=autoencoder_file,
-            classifier_file=classifier_file,
+            use_classifier=use_classifier,
             inference_image_size=inference_image_size,
             device=torch.device("cpu"),
         )
