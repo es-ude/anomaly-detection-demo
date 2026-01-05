@@ -36,9 +36,9 @@ def main() -> None:
         num_workers=defs.NUM_WORKERS,
         device=defs.DEVICE,
     )
-    model.eval()
+    model.to("cpu").eval()
 
-    model.determine_decision_boundary(ds_train[:][0], quantile=0.9)
+    model.determine_decision_boundary(calibration_data=ds_train[:][0], quantile=0.9)
 
     _write_classification_report(
         model, ds_val, OUTPUT_DIR / "classification_report.txt"
