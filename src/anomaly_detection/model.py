@@ -1,4 +1,5 @@
 import torch
+from torch.nn.functional import mse_loss
 
 
 class Encoder(torch.nn.Sequential):
@@ -36,23 +37,25 @@ class Autoencoder(torch.nn.Module):
         decoded = self.decoder(encoded)
         return encoded, decoded
 
-    def determine_decision_boundary(self, calibration_data: torch.Tensor) -> None: ...
+    @torch.no_grad
+    def determine_decision_boundary(
+        self, calibration_data: torch.Tensor, quantile: float
+    ) -> None:
+        _, reconstructed_data = self(calibration_data)
+        deviations = _compute_deviation(reconstructed_data, calibration_data)
+        self.decision_boundary = deviations.quantile(quantile)
 
-    def classify(self, x: torch.Tensor) -> torch.Tensor: ...
+    @torch.no_grad
+    def classify(self, x: torch.Tensor) -> torch.Tensor:
+        if self.decision_boundary is None:
+            raise ValueError(
+                "`decision_boundary` is None. Call `determine_decision_boundary(...)` before `classify(...)`."
+            )
 
+        _, reconstructed = self(x)
+        deviation = _compute_deviation(reconstructed, x)
 
-class Classifier(torch.nn.Sequential):
-    def __init__(self) -> None:
-        super().__init__(
-            torch.nn.Dropout(p=0.5),
-            *_dwsep_conv(in_channels=128, out_channels=4, kernel_size=3),
-            torch.nn.MaxPool2d(kernel_size=2),
-            torch.nn.ReLU(),
-            torch.nn.Dropout(p=0.5),
-            *_dwsep_conv(in_channels=4, out_channels=2, kernel_size=3),
-            torch.nn.AdaptiveAvgPool2d(output_size=1),
-            torch.nn.Flatten(start_dim=-3),
-        )
+        return (deviation > self.decision_boundary).to(torch.long)
 
 
 def _dwsep_conv(
@@ -117,3 +120,9 @@ def _deconv_block(in_channels: int, out_channels: int) -> list[torch.nn.Module]:
         ),
         torch.nn.ReLU(),
     ]
+
+
+def _compute_deviation(
+    reconstructed: torch.Tensor, original: torch.Tensor
+) -> torch.Tensor:
+    return mse_loss(reconstructed, original, reduction="none").mean(dim=[-1, -2, -3])
