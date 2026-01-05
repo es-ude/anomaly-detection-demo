@@ -14,14 +14,13 @@ with app.setup:
     import matplotlib.pyplot as plt
 
     from src.anomaly_detection.datasets.cookie_clf import CookieClfDataset
-    from src.anomaly_detection.model import Autoencoder, Classifier
+    from src.anomaly_detection.model import Autoencoder
     from src.anomaly_detection.persistence import load_model
     from src.anomaly_detection.preprocessing import InferencePreprocessing
 
     DATASET_DIR = Path(os.environ["COOKIE_CLF_DATASET_DIR"])
     CKPT_DIR = Path(os.environ["COOKIE_CKPT_DIR"])
     AE_MODEL_FILE = CKPT_DIR / "ae_model.pt"
-    CLF_MODEL_FILE = CKPT_DIR / "clf_model.pt"
 
 
 @app.cell
@@ -35,32 +34,27 @@ def _():
         ),
     )
     ds_train, ds_test = create_ds(training_set=True), create_ds(training_set=False)
-    return ds_test, ds_train
+    return (ds_test,)
 
 
 @app.cell
 def _():
-    ae_model = Autoencoder()
-    load_model(ae_model, AE_MODEL_FILE)
-    _ = ae_model.eval()
-
-    clf_model = Classifier()
-    load_model(clf_model, CLF_MODEL_FILE)
-    _ = clf_model.eval()
-    return ae_model, clf_model
+    model = Autoencoder()
+    load_model(model, AE_MODEL_FILE)
+    _ = model.eval()
+    return (model,)
 
 
 @app.cell
-def _(ae_model, clf_model, ds_train):
-    images, labels = ds_train[:]
+def _(ds_test, model):
+    images, labels = ds_test[:]
 
     with torch.no_grad():
-        encoded_images, reconstructed_images = ae_model(images)
-        predicted_labels = clf_model(encoded_images)
+        encoded_images, reconstructed_images = model(images)
+        predicted_labels = model.classify(images)
 
     images = images.squeeze(dim=-3)
     reconstructed_images = reconstructed_images.squeeze(dim=-3)
-    predicted_labels = predicted_labels.argmax(dim=-1)
 
     accuracy = (predicted_labels == labels).sum() / len(labels)
     accuracy
@@ -69,7 +63,7 @@ def _(ae_model, clf_model, ds_train):
 
 @app.cell
 def _(ds_test):
-    img_idx = mo.ui.number(start=0, stop=len(ds_test), label="Image Index")
+    img_idx = mo.ui.number(start=0, stop=len(ds_test)-1, label="Image Index")
     img_idx
     return (img_idx,)
 

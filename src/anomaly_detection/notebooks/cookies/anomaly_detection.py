@@ -38,9 +38,6 @@ def _():
 
 @app.cell
 def _():
-    def binary_labels(label: torch.Tensor) -> torch.Tensor:
-        return torch.tensor(0) if label == 0 else torch.tensor(1)
-
     create_ds = partial(
             CookieAdDataset,
             dataset_dir=DATASET_DIR,
@@ -48,7 +45,6 @@ def _():
                 target_img_width=int(os.environ["IMAGE_WIDTH"]),
                 target_img_height=int(os.environ["IMAGE_HEIGHT"]),
             ),
-            target_transform=binary_labels,
         )
     ds_train, ds_test = create_ds(training_set=True), create_ds(training_set=False)
 
@@ -59,21 +55,42 @@ def _():
 
 
 @app.cell
+def _(ds_train, model):
+    orig = ds_train[:][0][0]
+    with torch.no_grad():
+        _, reconst = model(orig)
+    return orig, reconst
+
+
+@app.cell
+def _(orig, reconst):
+    deviations = torch.nn.functional.mse_loss(reconst, orig, reduction="none").mean(dim=[-1,-2,-3])
+    deviations.shape
+    return (deviations,)
+
+
+@app.cell
+def _(deviations):
+    deviations.quantile(0.9)
+    return
+
+
+@app.cell
 def _(ds_test, ds_train, model):
     data: dict[str, Any] = {"set": [], "idx": [], "loss": [], "label": []}
 
     def perform_inference(ds: CookieAdDataset, set_name: str) -> None:
-        loss_fn = torch.nn.L1Loss()
+        loss_fn = torch.nn.MSELoss(reduction="mean")
 
         for idx, (original, label) in enumerate(ds):
             with torch.no_grad():
                 encoded, reconstructed = model(original)
-                loss = loss_fn(reconstructed, original)
+                loss = torch.nn.functional.mse_loss(reconstructed, original)
 
-                data["set"].append(set_name)
-                data["idx"].append(idx)
-                data["loss"].append(loss.item())
-                data["label"].append(int(label))
+            data["set"].append(set_name)
+            data["idx"].append(idx)
+            data["loss"].append(loss.item())
+            data["label"].append(int(label))
 
     perform_inference(ds_train, "train")
     perform_inference(ds_test, "test")
