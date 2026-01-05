@@ -2,6 +2,7 @@ import os
 from functools import partial
 from pathlib import Path
 
+import torch
 from sklearn.metrics import classification_report
 from torch.utils.data import ConcatDataset, Dataset, random_split
 from torchsummary import summary
@@ -77,7 +78,8 @@ def _classifier_dataset() -> Dataset:
 def _write_classification_report(
     autoencoder: Autoencoder, ds: Dataset, report_file: Path
 ) -> None:
-    samples, labels = ds[:]
+    samples = torch.stack([x for x, _ in ds])
+    labels = torch.stack([y for _, y in ds])
     predictions = autoencoder.classify(samples)
     report = classification_report(
         labels, predictions, target_names=["good", "damaged"]
