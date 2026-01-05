@@ -61,13 +61,14 @@ class AnomalyDetectorProcessor(_BaseImageProcessor):
         use_classifier: bool,
         target_image_size: tuple[int, int],
         inference_image_size: tuple[int, int],
+        device: str,
     ) -> None:
         super().__init__(target_image_size)
         self.anomaly_detector = AnomalyDetector(
             autoencoder_file=autoencoder_file,
             use_classifier=use_classifier,
             inference_image_size=inference_image_size,
-            device=torch.device("cpu"),
+            device=torch.device(device),
         )
         self.anomaly_detector.load_model()
 

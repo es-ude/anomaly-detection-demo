@@ -30,6 +30,7 @@ IMAGE_HEIGHT = int(os.environ["IMAGE_HEIGHT"])
 
 AE_MODEL_CKPT = Path(os.environ["COOKIE_CKPT_DIR"]) / "ae_model.pt"
 USE_CLASSIFIER = "USE_CLASSIFIER" in os.environ
+DEVICE = os.environ["DEVICE"] if "DEVICE" in os.environ else "cpu"
 
 
 def setup() -> None:
@@ -45,6 +46,7 @@ def setup() -> None:
         use_classifier=USE_CLASSIFIER,
         target_image_size=(800, 800),
         inference_image_size=(IMAGE_HEIGHT, IMAGE_WIDTH),
+        device=DEVICE,
     )
 
     def _header() -> None:
