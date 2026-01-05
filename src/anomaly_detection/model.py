@@ -30,7 +30,9 @@ class Autoencoder(torch.nn.Module):
         super().__init__()
         self.encoder = Encoder()
         self.decoder = Decoder()
-        self.decision_boundary = self.register_buffer("decision_boundary", None)
+        self.register_buffer(
+            "decision_boundary", torch.tensor(-1, dtype=torch.get_default_dtype())
+        )
 
     def forward(self, input: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
         encoded = self.encoder(input)
@@ -47,9 +49,9 @@ class Autoencoder(torch.nn.Module):
 
     @torch.no_grad
     def classify(self, x: torch.Tensor) -> torch.Tensor:
-        if self.decision_boundary is None:
+        if self.decision_boundary == -1:
             raise ValueError(
-                "`decision_boundary` is None. Call `determine_decision_boundary(...)` before `classify(...)`."
+                "Invalid `decision_boundary`. Call `determine_decision_boundary(...)` before `classify(...)`."
             )
 
         _, reconstructed = self(x)
