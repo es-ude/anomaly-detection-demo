@@ -51,14 +51,14 @@ def _(ds_test, model):
 
     with torch.no_grad():
         encoded_images, reconstructed_images = model(images)
-        predicted_labels = model.classify(images)
+        predicted_labels = model.classify(images, reconstructed_images)
 
     images = images.squeeze(dim=-3)
     reconstructed_images = reconstructed_images.squeeze(dim=-3)
 
     accuracy = (predicted_labels == labels).sum() / len(labels)
     accuracy
-    return images, reconstructed_images
+    return images, predicted_labels, reconstructed_images
 
 
 @app.cell
@@ -69,11 +69,12 @@ def _(ds_test):
 
 
 @app.cell
-def _(images, img_idx, reconstructed_images):
+def _(images, img_idx, predicted_labels, reconstructed_images):
     def plot_reconstructed(img_idx: int) -> plt.Figure:
-        fig, axs = plt.subplots(nrows=1, ncols=2)
+        fig, axs = plt.subplots(nrows=1, ncols=2, figsize=(8, 4), tight_layout=True)
         axs[0].imshow(images[img_idx], vmin=0, vmax=1, cmap="gray")
         axs[1].imshow(reconstructed_images[img_idx], vmin=0, vmax=1, cmap="gray")
+        fig.suptitle("Normal" if predicted_labels[img_idx] == 0 else "Defect")
         return fig
 
     plot_reconstructed(img_idx.value)
