@@ -71,11 +71,12 @@ class AnomalyDetector:
 
         with torch.no_grad():
             _, reconstructed = self._autoencoder(image)
-            reconstructed = reconstructed.clamp(min=0, max=1).cpu()
-
             prediction = (
-                self._autoencoder.classify(image).cpu() if self.use_classifier else None
+                self._autoencoder.classify(image, reconstructed).cpu()
+                if self.use_classifier
+                else None
             )
+            reconstructed = reconstructed.clamp(min=0, max=1).cpu()
 
         return reconstructed, prediction
 

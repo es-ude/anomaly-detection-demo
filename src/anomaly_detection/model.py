@@ -1,3 +1,5 @@
+from typing import Optional
+
 import torch
 from torch.nn.functional import mse_loss
 
@@ -34,8 +36,8 @@ class Autoencoder(torch.nn.Module):
             "decision_boundary", torch.tensor(-1, dtype=torch.get_default_dtype())
         )
 
-    def forward(self, input: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
-        encoded = self.encoder(input)
+    def forward(self, inputs: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
+        encoded = self.encoder(inputs)
         decoded = self.decoder(encoded)
         return encoded, decoded
 
@@ -48,14 +50,20 @@ class Autoencoder(torch.nn.Module):
         self.decision_boundary = deviations.quantile(quantile)
 
     @torch.no_grad
-    def classify(self, x: torch.Tensor) -> torch.Tensor:
+    def classify(
+        self, inputs: torch.Tensor, reconstructed: Optional[torch.Tensor] = None
+    ) -> torch.Tensor:
         if self.decision_boundary == -1:
             raise ValueError(
                 "Invalid `decision_boundary`. Call `determine_decision_boundary(...)` before `classify(...)`."
             )
 
-        _, reconstructed = self(x)
-        deviation = _compute_deviation(reconstructed, x)
+        if reconstructed is None:
+            _, reconst = self(inputs)
+        else:
+            reconst = reconstructed
+
+        deviation = _compute_deviation(inputs, reconst)
 
         return (deviation > self.decision_boundary).to(torch.long)
 
@@ -125,6 +133,6 @@ def _deconv_block(in_channels: int, out_channels: int) -> list[torch.nn.Module]:
 
 
 def _compute_deviation(
-    reconstructed: torch.Tensor, original: torch.Tensor
+    original: torch.Tensor, reconstructed: torch.Tensor
 ) -> torch.Tensor:
     return mse_loss(reconstructed, original, reduction="none").mean(dim=[-1, -2, -3])
