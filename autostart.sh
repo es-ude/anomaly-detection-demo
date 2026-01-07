@@ -10,7 +10,7 @@
 # 2. Add this script to '.config/labwc/autostart'
 # 3. Reboot machine
 
-SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+SCRIPT_DIR="$(dirname "$(readlink -f "$0")")"
 cd "${SCRIPT_DIR}" || exit 1
 
 uv run --env-file=.env src/demo_interface/demo.py &
