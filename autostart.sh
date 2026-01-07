@@ -13,7 +13,6 @@
 SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
 cd "${SCRIPT_DIR}" || exit 1
 
-export ENABLE_PI_CAM=1
-uv run src/demo_interface/demo.py &
+uv run --env-file=.env src/demo_interface/demo.py &
 sleep 30
-chromium http://127.0.0.1:8080/anomaly-detection --kiosk --noerrdialogs --disable-infobars --no-first-run --enable-features=OverlayScrollbar --start-maximized --force-device-scale-factor=1.2
+chromium http://localhost:8080/anomaly-detection --kiosk --noerrdialogs --disable-infobars --no-first-run --enable-features=OverlayScrollbar --start-maximized --force-device-scale-factor=1.2

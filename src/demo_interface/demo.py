@@ -273,4 +273,10 @@ def setup() -> None:
 
 
 app.on_startup(setup)
-ui.run(title="CookieAdDemo", favicon="🍪")
+ui.run(
+    host="0.0.0.0",
+    port=8080,
+    title="CookieAdDemo",
+    favicon="🍪",
+    show=False,
+)

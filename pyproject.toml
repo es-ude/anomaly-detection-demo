@@ -46,9 +46,6 @@ dev = [
     "pynvim>=0.5.2",
     "ipykernel>=6.29.5",
 ]
-# rpi = [
-#     "picamera2>=0.3.27",
-# ]
 
 [tool.marimo.runtime]
 dotenv = [".env", ".env.testing"]
