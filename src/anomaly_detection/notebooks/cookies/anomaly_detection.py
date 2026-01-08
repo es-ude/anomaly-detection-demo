@@ -46,37 +46,16 @@ def _():
                 target_img_height=int(os.environ["IMAGE_HEIGHT"]),
             ),
         )
-    ds_train, ds_test = create_ds(training_set=True), create_ds(training_set=False)
+    ds_ae, ds_clf = create_ds(training_set=True), create_ds(training_set=False)
 
     model = Autoencoder()
     load_model(model, MODEL_FILE)
     _ = model.eval()
-    return ds_test, ds_train, model
+    return ds_ae, ds_clf, model
 
 
 @app.cell
-def _(ds_train, model):
-    orig = ds_train[:][0][0]
-    with torch.no_grad():
-        _, reconst = model(orig)
-    return orig, reconst
-
-
-@app.cell
-def _(orig, reconst):
-    deviations = torch.nn.functional.mse_loss(reconst, orig, reduction="none").mean(dim=[-1,-2,-3])
-    deviations.shape
-    return (deviations,)
-
-
-@app.cell
-def _(deviations):
-    deviations.quantile(0.9)
-    return
-
-
-@app.cell
-def _(ds_test, ds_train, model):
+def _(ds_ae, ds_clf, model):
     data: dict[str, Any] = {"set": [], "idx": [], "loss": [], "label": []}
 
     def perform_inference(ds: CookieAdDataset, set_name: str) -> None:
@@ -92,8 +71,8 @@ def _(ds_test, ds_train, model):
             data["loss"].append(loss.item())
             data["label"].append(int(label))
 
-    perform_inference(ds_train, "train")
-    perform_inference(ds_test, "test")
+    perform_inference(ds_ae, "ae")
+    perform_inference(ds_clf, "clf")
 
     df = pd.DataFrame.from_dict(data)
     df[["set", "loss"]].groupby("set").describe().round(decimals=4)
@@ -101,15 +80,15 @@ def _(ds_test, ds_train, model):
 
 
 @app.cell
-def _(ds_test):
-    img_idx = mo.ui.number(start=0, stop=len(ds_test)-1, label="Image Index")
+def _(ds_clf):
+    img_idx = mo.ui.number(start=0, stop=len(ds_clf)-1, label="Image Index")
     img_idx
     return (img_idx,)
 
 
 @app.cell
-def _(ds_test, img_idx, model):
-    img_original, _ = cast(torch.Tensor, ds_test[img_idx.value])
+def _(ds_clf, img_idx, model):
+    img_original, _ = cast(torch.Tensor, ds_clf[img_idx.value])
     with torch.no_grad():
         img_reconstr = cast(torch.Tensor, model(img_original)[1])
 
@@ -147,20 +126,20 @@ def _():
 
 @app.cell
 def _(df, quantile):
-    decision_boundary = df.loc[df["set"] == "train", "loss"].quantile(quantile.value)
+    decision_boundary = df.loc[df["set"] == "ae", "loss"].quantile(quantile.value)
 
     df["prediction"] = 0
     df.loc[df["loss"] > decision_boundary, "prediction"] = 1
 
-    df_test = df[df["set"] == "test"]
-    print(classification_report(df_test["label"], df_test["prediction"], target_names=["good", "damaged"]))
-    return decision_boundary, df_test
+    df_clf = df[df["set"] == "clf"]
+    print(classification_report(df_clf["label"], df_clf["prediction"], target_names=["good", "damaged"]))
+    return decision_boundary, df_clf
 
 
 @app.cell
-def _(decision_boundary, df_test):
-    plt.hist(df_test[df_test["label"] == 0]["loss"], color="tab:green", alpha=0.8)
-    plt.hist(df_test[df_test["label"] == 1]["loss"], color="tab:blue", alpha=0.8)
+def _(decision_boundary, df_clf):
+    plt.hist(df_clf[df_clf["label"] == 0]["loss"], color="tab:green", alpha=0.8)
+    plt.hist(df_clf[df_clf["label"] == 1]["loss"], color="tab:blue", alpha=0.8)
     plt.axvline(x=decision_boundary, color="r", linestyle="--")
     return
 
