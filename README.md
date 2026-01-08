@@ -18,12 +18,12 @@ IMAGE_HEIGHT=128
 MVTEC_DATASET_DIR=<absolute_path_to_dataset>
 MVTEC_OBJECT=hazelnut
 MVTEC_OUTPUT_DIR=<absolute_path_to_output_dir>/mvtec
-MVTEC_CKPT_DIR=<absolute_path_to_project_dir>/src/anomaly_detection/model_checkpoints/mvtec
+MVTEC_CKPT_DIR=<absolute_path_to_project_dir>/src/demo/anomaly_detection/model_checkpoints/mvtec
 
 COOKIE_AE_DATASET_DIR=<absolute_path_to_dataset>/v2
 COOKIE_CLF_DATASET_DIR=<absolute_path_to_dataset>
 COOKIE_OUTPUT_DIR=<absolute_path_to_output_dir>/cookie
-COOKIE_CKPT_DIR=<absolute_path_to_project_dir>/src/anomaly_detection/model_checkpoints/cookie
+COOKIE_CKPT_DIR=<absolute_path_to_project_dir>/src/demo/anomaly_detection/model_checkpoints/cookie
 
 # ENABLE_PI_CAM=
 # USE_CLASSIFIER=
@@ -34,13 +34,13 @@ COOKIE_CKPT_DIR=<absolute_path_to_project_dir>/src/anomaly_detection/model_check
 ### MVTec (Hazelnut) Training
 
 ```bash
-uv run --env-file=.env src/anomaly_detection/experiments/train_mvtec_autoencoder.py
+uv run --env-file=.env src/demo/anomaly_detection/experiments/train_mvtec_autoencoder.py
 ```
 
 ### Cookie Training
 
 ```bash
-uv run --env-file=.env src/anomaly_detection/experiments/train_cookie_autoencoder.py
+uv run --env-file=.env src/demo/anomaly_detection/experiments/train_cookie_autoencoder.py
 ```
 
 ## Run Demo Application
@@ -140,7 +140,7 @@ pip install uv
 
 uv sync
 
-uv run --env-file=.env python -u src/anomaly_detection/experiments/train_cookie_autoencoder.py
+uv run --env-file=.env python -u src/demo/anomaly_detection/experiments/cookie/train_autoencoder.py
 ```
 
 ### Run Job (with slurm)

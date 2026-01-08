@@ -34,4 +34,4 @@ pip install uv
 
 uv sync
 
-uv run --env-file=.env src/anomaly_detection/experiments/train_cookie_autoencoder.py
+uv run --env-file=.env src/demo/anomaly_detection/experiments/cookie/train_autoencoder.py

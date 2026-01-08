@@ -13,6 +13,6 @@
 SCRIPT_DIR="$(dirname "$(readlink -f "$0")")"
 cd "${SCRIPT_DIR}" || exit 1
 
-uv run --env-file=.env src/demo_interface/demo.py &
+uv run --env-file=.env demo &
 sleep 30
 chromium http://localhost:8080/anomaly-detection --kiosk --noerrdialogs --disable-infobars --no-first-run --enable-features=OverlayScrollbar --start-maximized --force-device-scale-factor=1.2
