@@ -4,18 +4,14 @@ from pathlib import Path
 
 import torch
 from sklearn.metrics import classification_report
-from torch.utils.data import ConcatDataset, Dataset, random_split
+from torch.utils.data import Dataset, random_split
 from torchsummary import summary
 from torchvision.transforms.v2 import RandomErasing
 
 import src.anomaly_detection.experiments.training_definitions as defs
 from src.anomaly_detection.datasets.cookie_ad import CookieAdDataset
-from src.anomaly_detection.datasets.cookie_clf import CookieClfDataset
 from src.anomaly_detection.model import Autoencoder
-from src.anomaly_detection.preprocessing import (
-    InferencePreprocessing,
-    TrainingPreprocessing,
-)
+from src.anomaly_detection.preprocessing import TrainingPreprocessing
 from src.anomaly_detection.training import train_autoencoder
 
 OUTPUT_DIR = Path(os.environ["COOKIE_OUTPUT_DIR"])
@@ -29,7 +25,7 @@ def main() -> None:
     model = Autoencoder()
     summary(model, input_size=(1, defs.IMAGE_HEIGHT, defs.IMAGE_WIDTH), device="cpu")
 
-    ds_train, ds_val = _autoencoder_datasets()
+    (ds_train, ds_val), ds_clf = _autoencoder_datasets()
 
     history = train_autoencoder(
         model=model,
@@ -45,34 +41,28 @@ def main() -> None:
     )
     model.to("cpu").eval()
 
-    model.determine_decision_boundary(calibration_data=ds_train[:][0], quantile=0.95)
+    model.determine_decision_boundary(calibration_data=ds_val[:][0], quantile=0.95)
 
     _write_classification_report(
         autoencoder=model,
-        ds=_classifier_dataset(),
+        ds=ds_clf,
         report_file=OUTPUT_DIR / "classification_report.txt",
     )
     defs.save_model(model, OUTPUT_DIR / "ae_model.pt")
     defs.save_history(history, OUTPUT_DIR / "ae_history.csv")
 
 
-def _autoencoder_datasets() -> tuple[Dataset, Dataset]:
-    ds = CookieAdDataset(
+def _autoencoder_datasets() -> tuple[tuple[Dataset, Dataset], Dataset]:
+    load_dataset = partial(
+        CookieAdDataset,
         dataset_dir=AE_DATASET_DIR,
-        training_set=True,
         sample_transform=TrainingPreprocessing(defs.IMAGE_HEIGHT, defs.IMAGE_WIDTH),
         in_memory=True,
     )
-    return tuple(random_split(ds, lengths=[0.8, 0.2]))  # type: ignore
-
-
-def _classifier_dataset() -> Dataset:
-    load_ds = partial(
-        CookieClfDataset,
-        dataset_dir=CLF_DATASET_DIR,
-        sample_transform=InferencePreprocessing(defs.IMAGE_HEIGHT, defs.IMAGE_WIDTH),
-    )
-    return ConcatDataset([load_ds(training_set=True), load_ds(training_set=False)])
+    ds_ae = load_dataset(training_set=True)
+    ds_clf = load_dataset(training_set=False)
+    ds_ae_train, ds_ae_val = random_split(ds_ae, lengths=[0.8, 0.2])
+    return (ds_ae_train, ds_ae_val), ds_clf
 
 
 def _write_classification_report(
