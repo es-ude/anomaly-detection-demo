@@ -139,8 +139,15 @@ def _(ds_test, img_idx, model):
 
 
 @app.cell
-def _(df):
-    decision_boundary = df.loc[df["set"] == "train", "loss"].quantile(0.9)
+def _():
+    quantile = mo.ui.slider(start=0, stop=1, step=0.01, value=0.9, label="Quantile", show_value=True)
+    quantile
+    return (quantile,)
+
+
+@app.cell
+def _(df, quantile):
+    decision_boundary = df.loc[df["set"] == "train", "loss"].quantile(quantile.value)
 
     df["prediction"] = 0
     df.loc[df["loss"] > decision_boundary, "prediction"] = 1
