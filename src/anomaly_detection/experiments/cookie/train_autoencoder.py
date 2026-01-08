@@ -45,7 +45,7 @@ def main() -> None:
     )
     model.to("cpu").eval()
 
-    model.determine_decision_boundary(calibration_data=ds_train[:][0], quantile=0.9)
+    model.determine_decision_boundary(calibration_data=ds_train[:][0], quantile=0.95)
 
     _write_classification_report(
         autoencoder=model,
