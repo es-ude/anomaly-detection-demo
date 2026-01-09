@@ -1,3 +1,4 @@
+import time
 import uuid
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
@@ -27,6 +28,16 @@ def _get_camera(camera: Literal["opencv", "picam"], port: int) -> _Camera:
     return Camera(cam_port=port, width=IMAGE_WIDTH, height=IMAGE_HEIGHT)
 
 
+def _wait_to_capture_new_image(delay: int, alert_before_sleep: bool) -> None:
+    if args.delay < 0:
+        _ = input("[*] Press 'enter' to take a picture...")
+    else:
+        if alert_before_sleep:
+            print("\a", end="")
+
+        time.sleep(delay)
+
+
 def _get_image_name() -> str:
     return f"{uuid.uuid4().hex}.jpg"
 
@@ -46,12 +57,13 @@ def main(args: Namespace) -> None:
 
     try:
         while camera.is_opened():
-            _ = input("Press 'enter' to take a picture...")
+            _wait_to_capture_new_image(args.delay, alert_before_sleep=args.alert)
 
             image = camera.read_frame()
+            print("[+] New image captured.")
 
             if image is None:
-                print("[Error] Could not take picture.")
+                print("[!] Could not take picture.")
             else:
                 _save_image(image, destination=img_dir / _get_image_name())
     except KeyboardInterrupt:
@@ -59,7 +71,7 @@ def main(args: Namespace) -> None:
     finally:
         camera.release()
 
-    print("[Error] Camera closed.")
+    print("[!] Camera closed.")
 
 
 if __name__ == "__main__":
@@ -69,6 +81,8 @@ if __name__ == "__main__":
         "-c", "--camera", default="picam", choices=("opencv", "picam")
     )
     argparser.add_argument("-p", "--camera-port", default=0, type=int)
+    argparser.add_argument("-t", "--delay", default=-1, type=int)
+    argparser.add_argument("--alert", default=True, type=bool)
     args = argparser.parse_args()
 
     main(args)
