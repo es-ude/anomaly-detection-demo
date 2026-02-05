@@ -1,8 +1,24 @@
-from argparse import ArgumentParser, Namespace
 from pathlib import Path
+
+import typer
 
 from demo.camera.image import Image
 from demo.dataset_recording.utils import IMG_EXT, load_image, save_image
+
+
+def main(
+    source_dir: Path, destination_dir: Path, width: int = 800, height: int = 800
+) -> None:
+    src_image_files = filter(lambda p: p.is_file(), source_dir.rglob(f"*.{IMG_EXT}"))
+
+    for src_image_file in src_image_files:
+        image = load_image(src_image_file)
+        image = _center_crop(image, image_size=(height, width))
+
+        dest_image_file = destination_dir / src_image_file.relative_to(source_dir)
+        dest_image_file.parent.mkdir(parents=True, exist_ok=True)
+
+        save_image(image, dest_image_file)
 
 
 def _center_crop(image: Image, image_size: tuple[int, int]) -> Image:
@@ -21,28 +37,5 @@ def _center_crop(image: Image, image_size: tuple[int, int]) -> Image:
     return cropped_frame
 
 
-def main(args: Namespace) -> None:
-    root_src_dir: Path = args.source
-    root_dest_dir: Path = args.destination
-
-    src_image_files = filter(lambda p: p.is_file(), root_src_dir.rglob(f"*.{IMG_EXT}"))
-
-    for src_image_file in src_image_files:
-        image = load_image(src_image_file)
-        image = _center_crop(image, image_size=(args.height, args.width))
-
-        dest_image_file = root_dest_dir / src_image_file.relative_to(root_src_dir)
-        dest_image_file.parent.mkdir(parents=True, exist_ok=True)
-
-        save_image(image, dest_image_file)
-
-
 if __name__ == "__main__":
-    argparser = ArgumentParser("Crop Recorded Images")
-    argparser.add_argument("-s", "--source", type=Path)
-    argparser.add_argument("-d", "--destination", type=Path)
-    argparser.add_argument("--width", default=800, type=int)
-    argparser.add_argument("--height", default=800, type=int)
-    args = argparser.parse_args()
-
-    main(args)
+    typer.run(main)
