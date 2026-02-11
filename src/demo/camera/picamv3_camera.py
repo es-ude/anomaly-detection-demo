@@ -1,41 +1,39 @@
+from time import sleep
+
+import numpy as np
 from libcamera import controls
 from picamera2 import Picamera2
 
 from demo.camera.image import Image
 
+from .camera import Camera
 
-class Camera:
-    def __init__(
-        self,
-        cam_port: int | str,
-        width: int = 1920,
-        height: int = 1080,
-        lens_position: None | float = None,
-    ):
+
+class PiCamera(Camera):
+    def __init__(self, cam_port: int | str, width: int = 1920, height: int = 1080):
         self.camera = Picamera2(camera_num=cam_port)
-        self.config = self.camera.create_video_configuration(
-            main={"size": (width, height), "format": "BGR888"}
+        capture_config = self.camera.create_still_configuration(
+            {"size": (width, height), "format": "RGB888"}
         )
-        self.camera.configure(self.config)
+        self.camera.configure(capture_config)
         self.camera.start()
-        if lens_position is not None:
-            self.camera.set_controls(
-                {"AfMode": controls.AfModeEnum.Manual, "LensPosition": lens_position}
-            )
-        else:
-            self.camera.set_controls({"AfMode": controls.AfModeEnum.Continuous})
-        self.is_open = True
+
+        self.camera.set_controls({"AfMode": controls.AfModeEnum.Auto})
+        sleep(1)
+        if not self.camera.autofocus_cycle():
+            print("Autofocus failed")
+
+        self.open = True
 
     def is_opened(self) -> bool:
-        return self.is_open
+        return self.camera is not None and self.open
 
     def read_frame(self) -> Image | None:
-        if not self.is_opened():
-            return None
+        image: np.ndarray = self.camera.capture()
 
-        return self.camera.capture_array()
+        return image
 
     def release(self) -> None:
         self.camera.stop()
         self.camera.close()
-        self.is_open = False
+        self.open = False

@@ -1,11 +1,11 @@
 import time
 import uuid
 from pathlib import Path
-from typing import Literal, Protocol
+from typing import Literal
 
 import typer
 
-from demo.camera.image import Image
+from demo.camera.camera import Camera as ICamera
 from demo.dataset_recording.utils import IMG_EXT, save_image
 
 
@@ -17,14 +17,12 @@ def main(
     alert: bool = True,
     image_width: int = 1920,
     image_height: int = 1080,
-    lens_position: None | float = None,
 ) -> None:
-    camera = _get_camera(
+    camera: ICamera = _get_camera(
         camera=camera_backend,
         port=camera_port,
         image_width=image_width,
         image_height=image_height,
-        lens_position=lens_position,
     )
 
     image_dir.mkdir(parents=True, exist_ok=True)
@@ -48,31 +46,23 @@ def main(
     print("[!] Camera closed.")
 
 
-class _Camera(Protocol):
-    def __init__(self, cam_port: int | str, width: int, height: int): ...
-    def is_opened(self) -> bool: ...
-    def read_frame(self) -> Image | None: ...
-    def release(self) -> None: ...
-
-
 def _get_camera(
     camera: Literal["opencv", "picam"],
     port: int,
     image_width: int,
     image_height: int,
-    lens_position: None | float,
-) -> _Camera:
+) -> ICamera:
     match camera:
         case "opencv":
-            from demo.camera.opencv_camera import Camera
+            from demo.camera.opencv_camera import CVCamera as Camera
+
+            kwargs: dict = {}  # TODO: Add controls
         case "picam":
-            from demo.camera.picamv3_camera import Camera
-    return Camera(
-        cam_port=port,
-        width=image_width,
-        height=image_height,
-        lens_position=lens_position,
-    )
+            from demo.camera.picamv3_camera import PiCamera as Camera
+
+            kwargs: dict = {}
+
+    return Camera(cam_port=port, width=image_width, height=image_height, **kwargs)
 
 
 def _wait_to_capture_new_image(delay: int, alert_before_sleep: bool) -> None:

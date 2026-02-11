@@ -5,6 +5,7 @@ from dataclasses import fields
 from pathlib import Path
 
 import cv2
+import numpy as np
 from nicegui import run
 
 from demo.anomaly_detection.anomaly_detector import DetectionResult
@@ -23,14 +24,14 @@ class DemoApplicationController:
     def __init__(
         self, cam_port: int | str, placeholder_image_file: Path, use_picam: bool = False
     ) -> None:
+        from demo.camera.camera import Camera as ICamera
+
         if use_picam:
-            from demo.camera.picamv3_camera import Camera as PiCamera
-
-            self._camera = PiCamera(cam_port, width=1920, height=1080)
+            from demo.camera.picamv3_camera import PiCamera as Camera
         else:
-            from demo.camera.opencv_camera import Camera as OpencvCamera
+            from demo.camera.opencv_camera import CVCamera as Camera
 
-            self._camera = OpencvCamera(cam_port, width=1920, height=1080)  # type: ignore
+        self._camera: ICamera = Camera(cam_port, width=1920, height=1080)
         self._placeholder_image = _load_image(placeholder_image_file)
         self._image_processor: ImageProcessor = _NoneImageProcessor()
         self._update_ui_callback: UpdateUICallback = lambda _: None
@@ -68,7 +69,10 @@ class DemoApplicationController:
 
 
 def _load_image(image_file: Path) -> Image:
-    return cv2.imread(str(image_file), flags=cv2.IMREAD_COLOR_RGB)
+    img = cv2.imread(str(image_file), flags=cv2.IMREAD_COLOR_RGB)
+    if img is None:
+        img = np.zeros((1080, 1920, 3), dtype=np.uint8)
+    return img
 
 
 def _image_to_string(image: Image) -> str:
