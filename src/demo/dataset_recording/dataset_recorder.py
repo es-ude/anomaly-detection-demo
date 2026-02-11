@@ -17,6 +17,7 @@ def main(
     alert: bool = True,
     image_width: int = 1920,
     image_height: int = 1080,
+    lens_position: None | float = None,
 ) -> None:
     camera = _get_camera(
         camera=camera_backend,
@@ -54,14 +55,23 @@ class _Camera(Protocol):
 
 
 def _get_camera(
-    camera: Literal["opencv", "picam"], port: int, image_width: int, image_height: int
+    camera: Literal["opencv", "picam"],
+    port: int,
+    image_width: int,
+    image_height: int,
+    lens_position: None | float,
 ) -> _Camera:
     match camera:
         case "opencv":
             from demo.camera.opencv_camera import Camera
         case "picam":
             from demo.camera.picamv3_camera import Camera
-    return Camera(cam_port=port, width=image_width, height=image_height)
+    return Camera(
+        cam_port=port,
+        width=image_width,
+        height=image_height,
+        lens_position=lens_position,
+    )
 
 
 def _wait_to_capture_new_image(delay: int, alert_before_sleep: bool) -> None:
