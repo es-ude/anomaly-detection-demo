@@ -148,3 +148,32 @@ uv run --env-file=.env python -u src/demo/anomaly_detection/experiments/cookie/t
 submit job: sbatch jobscript.sh </br>
 queue overview: squeue -l </br>
 cancel job: scancel <job_id> </br>
+
+## CSI camera support on Jetson Nano
+
+> [!TIP]
+> The Raspberry Pi Camera version 3 uses the Sony IMX708 sensor!
+
+1. Install kernel for PiCam v3 from arducam.com
+
+   ```bash
+   cd ~/Downloads
+   wget https://github.com/ArduCAM/MIPI_Camera/releases/download/v0.0.3/install_full.sh
+   chmod +x ./install_full.sh
+   ./install_full.sh -m imx708
+   ```
+
+2. Simple test for camera setup
+
+   ```
+   nvgstcapture-1.0
+   ```
+
+3. Detailed test with gstreamer
+
+   ```
+   sensor_id=0  # adjust according to the used CAM_PORT
+   Framerate=30 # range from 2 to 60 available
+
+   gst-launch-1.0 nvarguscamerasrc sensor_id=$sensor_id ! "video/x-raw(memory:NVMM),width=1920,height=1080,framerate=$Framerate/1,format=NV12" ! nvvidconv flip-method=0 ! "video/x-raw,width=960,height=720" ! nvvidconv ! nvegltransform ! nveglglessink -e
+   ```
