@@ -24,6 +24,7 @@ def main(
         port=camera_port,
         image_width=image_width,
         image_height=image_height,
+        lens_position=lens_position,
     )
 
     image_dir.mkdir(parents=True, exist_ok=True)
