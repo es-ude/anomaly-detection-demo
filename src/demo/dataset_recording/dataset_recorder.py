@@ -76,7 +76,7 @@ def _wait_to_capture_new_image(delay: int, alert_before_sleep: bool) -> None:
 
 
 def _get_image_name() -> str:
-    return f"{uuid.uuid4().hex}.{IMG_EXT}"
+    return f"{int(time.time())}_{uuid.uuid4().hex}.{IMG_EXT}"
 
 
 if __name__ == "__main__":
