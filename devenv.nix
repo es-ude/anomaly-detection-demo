@@ -1,13 +1,8 @@
 { pkgs, lib, config, inputs, ... }:
-let
-  pkgs-unstable = import inputs.nixpkgs-unstable { system = pkgs.stdenv.system; };
-in
 {
   packages = [
     pkgs.git
   ];
-
-  env.UV_VENV="${config.env.DEVENV_STATE}/venv";
 
   # env variables for anomaly detector
   # Override these in your local `devenv.local.nix` file
@@ -29,14 +24,10 @@ in
 
   languages.python = {
     enable = true;
-    version = "3.11";
-    venv.enable = true;
-    uv = {
-      enable = true;
-      package = pkgs-unstable.uv;
-      # sync.enable = true;
-      # sync.allGroups = true;
-    };
+    version = "3.13";
+    uv.enable = true;
+    uv.sync.enable = true;
+    uv.sync.allGroups = true;
   };
 
   scripts = {
@@ -69,10 +60,6 @@ in
   enterShell = ''
     echo
     echo "Welcome Back to Cookie Detection"
-    echo
-    echo "Initializing virtual environment..."
-    uv venv --system-site-packages --python ${pkgs.python3}/bin/python3 --clear --quiet && echo "Virtual environment initialized."
-    uv sync --quiet && echo "Python packages synchronized."
     echo
   '';
 }
