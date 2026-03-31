@@ -1,4 +1,4 @@
-{ pkgs, lib, config, inputs, ... }:
+{ pkgs, ... }:
 {
   packages = [
     pkgs.git
@@ -25,6 +25,7 @@
   languages.python = {
     enable = true;
     version = "3.13";
+    venv.enable = true;
     uv.enable = true;
     uv.sync.enable = true;
     uv.sync.allGroups = true;
