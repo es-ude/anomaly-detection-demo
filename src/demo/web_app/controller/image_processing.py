@@ -6,7 +6,7 @@ import cv2
 import torch
 
 from demo.anomaly_detection.anomaly_detector import AnomalyDetector, DetectionResult
-from demo.camera.image import Image, convert_bgr_to_rgb, convert_rgb_to_bgr
+from demo.camera.image import Image
 
 
 class ImageProcessor(Protocol):
@@ -45,13 +45,13 @@ class CalibrationProcessor(_BaseImageProcessor):
     def _process(self, image: Image) -> Image:
         height, width, _ = image.shape
         image_with_circle = cv2.circle(
-            img=convert_rgb_to_bgr(image),
+            img=image,
             center=(height // 2, width // 2),
             radius=175,
             color=(0, 0, 255),
             thickness=5,
         )
-        return convert_bgr_to_rgb(image_with_circle)
+        return image_with_circle
 
 
 class AnomalyDetectorProcessor(_BaseImageProcessor):
@@ -62,8 +62,10 @@ class AnomalyDetectorProcessor(_BaseImageProcessor):
         target_image_size: tuple[int, int],
         inference_image_size: tuple[int, int],
         device: str,
+        flip_horizontal: bool = True,
+        flip_vertical: bool = True,
     ) -> None:
-        super().__init__(target_image_size)
+        super().__init__(target_image_size, flip_horizontal, flip_vertical)
         self.anomaly_detector = AnomalyDetector(
             autoencoder_file=autoencoder_file,
             use_classifier=use_classifier,

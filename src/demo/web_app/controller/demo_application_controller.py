@@ -9,7 +9,8 @@ from nicegui import run
 
 from demo.anomaly_detection.anomaly_detector import DetectionResult
 from demo.camera.image import Image, convert_rgb_to_bgr
-from demo.web_app.image_processing import ImageProcessor
+
+from .image_processing import ImageProcessor
 
 type UpdateUICallback = Callable[[dict[str, str]], None] | Callable[[str], None]
 
@@ -21,7 +22,7 @@ class _NoneImageProcessor:
 
 class DemoApplicationController:
     def __init__(
-        self, cam_port: int | str, placeholder_image_file: Path, use_picam: bool = False
+        self, cam_port: int, placeholder_image_file: Path, use_picam: bool = False
     ) -> None:
         if use_picam:
             from demo.camera.picamv3_camera import Camera as PiCamera
@@ -68,7 +69,7 @@ class DemoApplicationController:
 
 
 def _load_image(image_file: Path) -> Image:
-    return cv2.imread(str(image_file), flags=cv2.IMREAD_COLOR_RGB)
+    return cv2.imread(str(image_file), flags=cv2.IMREAD_COLOR_BGR)
 
 
 def _image_to_string(image: Image) -> str:
