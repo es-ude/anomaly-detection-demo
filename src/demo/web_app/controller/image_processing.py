@@ -6,7 +6,7 @@ import cv2
 import torch
 
 from demo.anomaly_detection.anomaly_detector import AnomalyDetector, DetectionResult
-from demo.camera.image import Image
+from demo.camera import Image
 
 
 class ImageProcessor(Protocol):

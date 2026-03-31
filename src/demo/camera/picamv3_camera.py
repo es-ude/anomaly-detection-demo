@@ -1,7 +1,12 @@
-from libcamera import controls
-from picamera2 import Picamera2
+try:
+    from libcamera import controls
+    from picamera2 import Picamera2
+except ModuleNotFoundError:
+    raise ModuleNotFoundError(
+        "This class is only supported on the Raspberry with RaspbianOS.\nMake sure the picamera2 package from the OS is includeded!"
+    )
 
-from demo.camera.image import Image
+from .image import Image
 
 
 class Camera:
@@ -10,7 +15,6 @@ class Camera:
         cam_port: int | str,
         width: int = 1920,
         height: int = 1080,
-        lens_position: None | float = None,
     ):
         self.camera = Picamera2(camera_num=cam_port)
         self.config = self.camera.create_video_configuration(
@@ -18,12 +22,7 @@ class Camera:
         )
         self.camera.configure(self.config)
         self.camera.start()
-        if lens_position is not None:
-            self.camera.set_controls(
-                {"AfMode": controls.AfModeEnum.Manual, "LensPosition": lens_position}
-            )
-        else:
-            self.camera.set_controls({"AfMode": controls.AfModeEnum.Continuous})
+        self.camera.set_controls({"AfMode": controls.AfModeEnum.Continuous})
         self.is_open = True
 
     def is_opened(self) -> bool:

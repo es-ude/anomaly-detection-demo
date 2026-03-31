@@ -11,7 +11,6 @@ from demo.web_app.pages import register_pages
 
 USE_PICAM_MODULE = os.getenv("ENABLE_PICAM", "").lower() in ["true", "1"]
 CAM_PORT = int(os.getenv("CAM_PORT", 0))
-
 PLACEHOLDER_IMAGE = Path(__file__).parent.joinpath("controller", "placeholder.png")
 
 
@@ -19,7 +18,6 @@ async def setup() -> None:
     app_controller = DemoApplicationController(
         cam_port=CAM_PORT,
         placeholder_image_file=PLACEHOLDER_IMAGE,
-        use_picam=USE_PICAM_MODULE,
     )
 
     asyncio.create_task(app_controller.run())

@@ -14,7 +14,6 @@ IMAGE_HEIGHT = int(os.getenv("IMAGE_HEIGHT", 1920))
 FLIP_HORIZONTAL = os.getenv("FLIP_HORIZONTAL", "").lower() in ["true", "1"]
 FLIP_VERTICAL = os.getenv("FLIP_VERTICAL", "").lower() in ["true", "1"]
 
-
 ASSETS_DIR = Path(__file__).parent / "assets"
 ENCODER_VISUALIZATION = ASSETS_DIR / "darstellung_encoder_decoder_weiß.png"
 
