@@ -1,10 +1,15 @@
 from nicegui import ui
 
-from .anomaly_detection import anomaly_detection
+from demo.web_app.controller.demo_application_controller import (
+    DemoApplicationController,
+)
+
+from .anomaly_detection import anomaly_detection, get_anomaly_detection_processor
 from .basic import basic
 from .calibration import calibrate
+from .training import training
 
-__app_controller = None
+__app_controller: DemoApplicationController
 
 
 async def basic_page():
@@ -22,7 +27,12 @@ async def anomaly_detection_page():
     await anomaly_detection(__app_controller)
 
 
-async def register_pages(app_controller):
+async def training_page():
+    global __app_controller
+    await training(__app_controller, get_anomaly_detection_processor())
+
+
+async def register_pages(app_controller: DemoApplicationController):
     global __app_controller
     __app_controller = app_controller
 
@@ -30,3 +40,4 @@ async def register_pages(app_controller):
     ui.page("/basic", title="Basic Image Processing")(basic_page)
     ui.page("/calibration", title="Calibration")(calibrate_page)
     ui.page("/anomaly-detection", title="Anomaly Detection")(anomaly_detection_page)
+    ui.page("/training", title="Live Training")(training_page)

@@ -74,6 +74,12 @@ class AnomalyDetectorProcessor(_BaseImageProcessor):
         )
         self.anomaly_detector.load_model()
 
+    def get_anomaly_detector(self) -> AnomalyDetector:
+        return self.anomaly_detector
+
+    def reset_anomaly_detector(self) -> None:
+        self.anomaly_detector.load_model()
+
     def _process(self, image: Image) -> DetectionResult:
         return self.anomaly_detector.detect(image)
 

@@ -31,6 +31,10 @@ anomaly_detector_processor = AnomalyDetectorProcessor(
 )
 
 
+def get_anomaly_detection_processor() -> AnomalyDetectorProcessor:
+    return anomaly_detector_processor
+
+
 async def anomaly_detection(app_controller):
     page_layout()
 
