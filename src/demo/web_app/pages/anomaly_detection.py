@@ -6,11 +6,11 @@ from nicegui import ui
 from demo.web_app.controller.image_processing import AnomalyDetectorProcessor
 from demo.web_app.pages.layout import page_layout
 
-AE_MODEL_CKPT = Path(os.environ["COOKIE_CKPT_DIR"]) / "ae_model.pt"
-USE_CLASSIFIER = "USE_CLASSIFIER" in os.environ
-DEVICE = os.environ["DEVICE"] if "DEVICE" in os.environ else "cpu"
-IMAGE_WIDTH = int(os.environ["IMAGE_WIDTH"])
-IMAGE_HEIGHT = int(os.environ["IMAGE_HEIGHT"])
+AE_MODEL_CKPT = Path(os.getenv("COOKIE_CKPT_DIR", "")) / "ae_model.pt"
+USE_CLASSIFIER = os.getenv("USE_CLASSIFIER", "").lower() in ["true", "1"]
+DEVICE = os.getenv("DEVICE", "cpu")
+IMAGE_WIDTH = int(os.getenv("IMAGE_WIDTH", 1080))
+IMAGE_HEIGHT = int(os.getenv("IMAGE_HEIGHT", 1920))
 
 ASSETS_DIR = Path(__file__).parent / "assets"
 ENCODER_VISUALIZATION = ASSETS_DIR / "darstellung_encoder_decoder_weiß.png"

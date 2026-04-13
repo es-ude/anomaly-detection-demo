@@ -9,10 +9,8 @@ from demo.web_app.controller.demo_application_controller import (
 )
 from demo.web_app.pages import register_pages
 
-USE_PICAM_MODULE = "ENABLE_PI_CAM" in os.environ
-CAM_PORT = int(os.environ.get("CAM_PORT", 0))
-IMAGE_WIDTH = int(os.environ["IMAGE_WIDTH"])
-IMAGE_HEIGHT = int(os.environ["IMAGE_HEIGHT"])
+USE_PICAM_MODULE = os.getenv("ENABLE_PICAM", "").lower() in ["true", "1"]
+CAM_PORT = int(os.getenv("CAM_PORT", 0))
 
 PLACEHOLDER_IMAGE = Path(__file__).parent.joinpath("controller", "placeholder.png")
 
