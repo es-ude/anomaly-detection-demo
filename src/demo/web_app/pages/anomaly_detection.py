@@ -11,6 +11,9 @@ USE_CLASSIFIER = os.getenv("USE_CLASSIFIER", "").lower() in ["true", "1"]
 DEVICE = os.getenv("DEVICE", "cpu")
 IMAGE_WIDTH = int(os.getenv("IMAGE_WIDTH", 1080))
 IMAGE_HEIGHT = int(os.getenv("IMAGE_HEIGHT", 1920))
+FLIP_HORIZONTAL = os.getenv("FLIP_HORIZONTAL", "").lower() in ["true", "1"]
+FLIP_VERTICAL = os.getenv("FLIP_VERTICAL", "").lower() in ["true", "1"]
+
 
 ASSETS_DIR = Path(__file__).parent / "assets"
 ENCODER_VISUALIZATION = ASSETS_DIR / "darstellung_encoder_decoder_weiß.png"
@@ -24,6 +27,8 @@ anomaly_detector_processor = AnomalyDetectorProcessor(
     target_image_size=(800, 800),
     inference_image_size=(IMAGE_HEIGHT, IMAGE_WIDTH),
     device=DEVICE,
+    flip_horizontal=FLIP_HORIZONTAL,
+    flip_vertical=FLIP_VERTICAL,
 )
 
 

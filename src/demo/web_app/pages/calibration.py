@@ -1,10 +1,19 @@
+import os
+
 from nicegui import ui
 
 from demo.web_app.controller.image_processing import CalibrationProcessor
 
 from .layout import page_layout
 
-calibration_processor = CalibrationProcessor(target_image_size=(800, 800))
+FLIP_HORIZONTAL = os.getenv("FLIP_HORIZONTAL", "").lower() in ["true", "1"]
+FLIP_VERTICAL = os.getenv("FLIP_VERTICAL", "").lower() in ["true", "1"]
+
+calibration_processor = CalibrationProcessor(
+    target_image_size=(800, 800),
+    flip_horizontal=FLIP_HORIZONTAL,
+    flip_vertical=FLIP_VERTICAL,
+)
 
 
 async def calibrate(app_controller):

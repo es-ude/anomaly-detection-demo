@@ -1,10 +1,19 @@
+import os
+
 from nicegui import ui
 
 from demo.web_app.controller.image_processing import BasicProcessor
 
 from .layout import page_layout
 
-basic_processor = BasicProcessor(target_image_size=(800, 800))
+FLIP_HORIZONTAL = os.getenv("FLIP_HORIZONTAL", "").lower() in ["true", "1"]
+FLIP_VERTICAL = os.getenv("FLIP_VERTICAL", "").lower() in ["true", "1"]
+
+basic_processor = BasicProcessor(
+    target_image_size=(800, 800),
+    flip_horizontal=FLIP_HORIZONTAL,
+    flip_vertical=FLIP_VERTICAL,
+)
 
 
 async def basic(app_controller):
