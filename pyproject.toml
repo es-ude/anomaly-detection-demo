@@ -3,7 +3,7 @@ name = "demo"
 version = "0.1.0"
 description = ""
 readme = "README.md"
-requires-python = ">=3.13"
+requires-python = ">=3.10,<3.14"
 authors = [
   { name = "Julian Hoever", email = "julianhoever@posteo.de" },
   { name = "Florian Hettstedt", email = "florian.hettstedt@uni-due.de" },
@@ -21,9 +21,9 @@ dependencies = [
   "pillow>=11.1.0",
   "plotly>=6.3.0",
   "scikit-learn>=1.7.1",
-  "torch>=2.6.0",
+  "torch",
   "torchsummary>=1.5.1",
-  "torchvision>=0.21.0",
+  "torchvision",
   "typer>=0.21.1",
 ]
 
@@ -123,3 +123,23 @@ docstring-code-format = false
 # This only has an effect when the `docstring-code-format` setting is
 # enabled.
 docstring-code-line-length = "dynamic"
+
+[tool.uv.sources]
+torch = [
+  { index = "pytorch", marker = "sys_platform == 'darwin'" },
+  { index = "jetson-ai-lab", marker = "sys_platform == 'linux'" },
+]
+torchvision = [
+  { index = "pytorch", marker = "sys_platform == 'darwin'" },
+  { index = "jetson-ai-lab", marker = "sys_platform == 'linux'" },
+]
+
+[[tool.uv.index]]
+name = "pytorch"
+url = "https://download.pytorch.org/whl/"
+explicit = true
+
+[[tool.uv.index]]
+name = "jetson-ai-lab"
+url = "https://pypi.jetson-ai-lab.io/jp6/cu126"
+explicit = true
