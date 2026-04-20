@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional
+from typing import Optional, TypeAlias
 
 import cv2
 import numpy as np
@@ -11,7 +11,7 @@ from demo.anomaly_detection.model import Autoencoder
 from demo.anomaly_detection.persistence import load_model
 from demo.anomaly_detection.preprocessing import InferencePreprocessing
 
-type Image = cv2.typing.MatLike
+Image: TypeAlias = cv2.typing.MatLike
 
 
 @dataclass

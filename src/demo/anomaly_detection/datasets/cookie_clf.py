@@ -1,6 +1,6 @@
 from collections.abc import Callable
 from pathlib import Path
-from typing import Optional
+from typing import Optional, TypeAlias
 
 import numpy as np
 import torch
@@ -9,7 +9,7 @@ from torch.utils.data import Dataset
 
 CLASSES = ("good", "damaged")
 
-type Transformation = Callable[[torch.Tensor], torch.Tensor]
+Transformation: TypeAlias = Callable[[torch.Tensor], torch.Tensor]
 
 
 class CookieClfDataset(Dataset):

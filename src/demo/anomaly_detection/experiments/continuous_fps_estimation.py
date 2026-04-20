@@ -30,12 +30,15 @@ def main() -> None:
 
 
 def _get_model() -> AnomalyDetector:
-    return AnomalyDetector(
-        autoencoder_file=CKPT_DIR / "ae_model.pt",
+    ae_detector = AnomalyDetector(
         use_classifier=True,
         inference_image_size=(IMAGE_WIDTH, IMAGE_HEIGHT),
         device=DEVICE,
     )
+    ae_detector.load_model(
+        autoencoder_file=CKPT_DIR / "ae_model.pt",
+    )
+    return ae_detector
 
 
 def _get_image() -> npt.NDArray[np.uint8]:

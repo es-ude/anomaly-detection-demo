@@ -32,7 +32,7 @@ def main() -> None:
         epochs=7000,
         learning_rate=1e-3,
         weight_decay=0,
-        augment_input_image=RandomErasing(p=1, scale=(0.25, 0.25), value="random"),
+        augment_input_image=RandomErasing(p=1, scale=(0.25, 0.25), value="random"),  # type:ignore
         num_workers=defs.NUM_WORKERS,
         device=defs.DEVICE,
     )

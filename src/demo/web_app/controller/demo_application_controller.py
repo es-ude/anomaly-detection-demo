@@ -3,6 +3,7 @@ import base64
 from collections.abc import Callable
 from dataclasses import fields
 from pathlib import Path
+from typing import TypeAlias
 
 import cv2
 from nicegui import run
@@ -12,7 +13,7 @@ from demo.camera import Camera, Image, convert_bgr_to_rgb, convert_rgb_to_bgr
 
 from .image_processing import ImageProcessor
 
-type UpdateUICallback = Callable[[dict[str, str]], None] | Callable[[str], None]
+UpdateUICallback: TypeAlias = Callable[[dict[str, str]], None] | Callable[[str], None]
 
 
 class _NoneImageProcessor:
