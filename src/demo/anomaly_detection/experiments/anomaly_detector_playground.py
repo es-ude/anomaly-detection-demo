@@ -20,12 +20,13 @@ def main() -> None:
     all_images = list(IMAGE_PATH.glob("*.jpg"))
 
     anomaly_detector = AnomalyDetector(
-        autoencoder_file=CKPT_DIR / "ae_model.pt",
         use_classifier=True,
         inference_image_size=(IMAGE_WIDTH, IMAGE_HEIGHT),
         device=DEVICE,
     )
-    anomaly_detector.load_model()
+    anomaly_detector.load_model(
+        autoencoder_file=CKPT_DIR / "ae_model.pt",
+    )
 
     image = _load_image(all_images[0])
     result = anomaly_detector.detect(image)

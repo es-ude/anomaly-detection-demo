@@ -27,26 +27,24 @@ class DetectionResult:
 class AnomalyDetector:
     def __init__(
         self,
-        autoencoder_file: Path,
         use_classifier: bool,
         inference_image_size: tuple[int, int],
         device: torch.device = torch.device("cpu"),
     ) -> None:
-        self.autoencoder_file = autoencoder_file
         self.use_classifier = use_classifier
         self.inference_image_size = inference_image_size
         self.device = device
         self._autoencoder = None
         self._preprocessing = InferencePreprocessing(*inference_image_size)
 
-    def load_model(self) -> None:
+    def load_model(self, autoencoder_file: Path) -> None:
         self._autoencoder = Autoencoder()
-        load_model(self._autoencoder, self.autoencoder_file)
+        load_model(self._autoencoder, autoencoder_file)
         self._autoencoder.eval().to(self.device)
 
     def detect(self, image: Image) -> DetectionResult:
         if self._autoencoder is None:
-            self.load_model()
+            raise RuntimeError("Model not loaded!")
 
         preprocessed = self._preprocessing(image)
         reconstructed, prediction = self._perform_inference(preprocessed)

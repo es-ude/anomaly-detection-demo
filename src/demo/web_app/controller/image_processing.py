@@ -66,19 +66,19 @@ class AnomalyDetectorProcessor(_BaseImageProcessor):
         flip_vertical: bool = True,
     ) -> None:
         super().__init__(target_image_size, flip_horizontal, flip_vertical)
+        self.default_autoencoder_file = autoencoder_file
         self.anomaly_detector = AnomalyDetector(
-            autoencoder_file=autoencoder_file,
             use_classifier=use_classifier,
             inference_image_size=inference_image_size,
             device=torch.device(device),
         )
-        self.anomaly_detector.load_model()
+        self.anomaly_detector.load_model(autoencoder_file=autoencoder_file)
 
     def get_anomaly_detector(self) -> AnomalyDetector:
         return self.anomaly_detector
 
     def reset_anomaly_detector(self) -> None:
-        self.anomaly_detector.load_model()
+        self.anomaly_detector.load_model(autoencoder_file=self.default_autoencoder_file)
 
     def _process(self, image: Image) -> DetectionResult:
         return self.anomaly_detector.detect(image)
