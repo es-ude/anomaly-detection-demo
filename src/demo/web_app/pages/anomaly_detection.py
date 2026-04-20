@@ -38,6 +38,39 @@ def get_anomaly_detection_processor() -> AnomalyDetectorProcessor:
 async def anomaly_detection(app_controller):
     page_layout()
 
+    async def select_model() -> None:
+        with (
+            ui.dialog().props("persistent") as dialog,
+            ui.card(),
+        ):
+            with ui.row().classes("w-full justify-between"):
+                ui.button("Abort", on_click=dialog.close, color="negative")
+                with ui.dropdown_button(
+                    "Please select the model you want to use!", auto_close=True
+                ):
+                    ui.item("default", on_click=lambda: dialog.submit("default"))
+                    snapshot_dir = Path(__file__).parent.parent.joinpath("snapshots")
+                    if snapshot_dir.exists() and snapshot_dir.is_dir():
+                        for file in snapshot_dir.iterdir():
+                            ui.item(file.name, on_click=lambda: dialog.submit(file))
+        result = await dialog
+        if result is not None:
+            if result == "default":
+                anomaly_detector_processor.reset_anomaly_detector()
+                ui.notify(
+                    "Loaded default model!", progress=True, timeout=10000, type="info"
+                )
+            else:
+                model_dir = Path(result)
+                model_source = model_dir.joinpath("ae_model.pt")
+                anomaly_detector_processor.anomaly_detector.load_model(model_source)
+                ui.notify(
+                    f"Loaded {model_dir.name} model!",
+                    progress=True,
+                    timeout=10000,
+                    type="info",
+                )
+
     with ui.row().classes(
         "w-full justify-center py-4" + ("" if USE_CLASSIFIER else " collapse")
     ):
@@ -115,6 +148,11 @@ async def anomaly_detection(app_controller):
                 .style("object-fit: contain")
             )
             ui.label("Ergebnis mit Anomalien").classes("text-bold text-white")
+
+    with ui.page_sticky(position="bottom-left", x_offset=18, y_offset=18):
+        ui.button(icon="bolt", on_click=select_model, color="negative").props(
+            "fab"
+        ).tooltip("reset model")
 
     def update_images(result: dict[str, str | bool | None] | str) -> None:
         def get_image(key: str) -> str:
