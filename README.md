@@ -65,6 +65,66 @@ uv run src/demo_interface/demo.py
 >
 > If you want to use a standard webcam instead of the raspberry camera module you need to update the `USE_RASPBERRY_CAMERA_MODULE` parameter in the [demo.py file](src/demo_interface/demo.py)
 
+### Run on the Jetson Orin Nano with CUDA enabled
+
+1. Enable `MAXN SUPER` user
+2. Update System
+3. Upgrade CUDA packages
+
+- `wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/arm64/cuda-keyring_1.1-1_all.deb`
+- `sudo dpkg -i cuda-keyring_1.1-1_all.deb`
+- `sudo apt update`
+- `sudo apt upgrade`
+
+1. Install cuDSS: `sudo apt install cudss`
+2. Clone and go to Project Repository
+3. Start web-app: `uv run --python 3.10 --env-file=.env src/demo/web_app/main.py`
+
+> [!CAUTION]
+> Current Bug with Threading:
+>
+> ```
+> Visit your app on one of these URLs: ObservableSet({'http://192.168.205.240:8080', 'http://localhost:8080', 'http://172.17.0.1:8080'})
+> Process SpawnProcess-1:1:
+> Traceback (most recent call last):
+>   File "/usr/lib/python3.10/multiprocessing/process.py", line 314, in _bootstrap
+> ```
+
+    self.run()
+
+File "/usr/lib/python3.10/multiprocessing/process.py", line 108, in run
+self.\_target(*self.\_args, \*\*self.\_kwargs)
+File "/usr/lib/python3.10/concurrent/futures/process.py", line 240, in \_process_worker
+call_item = call_queue.get(block=True)
+File "/usr/lib/python3.10/multiprocessing/queues.py", line 122, in get
+return \_ForkingPickler.loads(res)
+File "/home/sid/Repositories/anomaly-detection-demo/.venv/lib/python3.10/site-packages/torch/multiprocessing/reductions.py", line 180, in rebuild_cuda_tensor
+storage = storage_cls.\_new_shared_cuda(
+File "/home/sid/Repositories/anomaly-detection-demo/.venv/lib/python3.10/site-packages/torch/storage.py", line 1464, in \_new_shared_cuda
+return torch.UntypedStorage.\_new_shared_cuda(*args, \*\*kwargs)
+torch.AcceleratorError: CUDA error: invalid argument
+Search for `cudaErrorInvalidValue' in https://docs.nvidia.com/cuda/cuda-runtime-api/group__CUDART__TYPES.html for more information.
+Compile with`TORCH_USE_CUDA_DSA` to enable device-side assertions.
+
+Task exception was never retrieved
+future: <Task finished name='Task-8' coro=<DemoApplicationController.run() done, defined at /home/sid/Repositories/anomaly-detection-demo/src/demo/web_app/controller/demo_application_controller.py:32> exception=BrokenProcessPool('A process in the process pool was terminated abruptly while the future was running or pending.')>
+Traceback (most recent call last):
+File "/home/sid/Repositories/anomaly-detection-demo/src/demo/web_app/controller/demo_application_controller.py", line 35, in run
+processed_frame = await self.\_take_and_process_frame()
+File "/home/sid/Repositories/anomaly-detection-demo/src/demo/web_app/controller/demo_application_controller.py", line 51, in \_take_and_process_frame
+return await run.cpu_bound(self.\_image_processor.process, frame)
+File "/home/sid/Repositories/anomaly-detection-demo/.venv/lib/python3.10/site-packages/nicegui/run.py", line 99, in cpu_bound
+raise e
+File "/home/sid/Repositories/anomaly-detection-demo/.venv/lib/python3.10/site-packages/nicegui/run.py", line 88, in cpu_bound
+return await \_run(process_pool, safe_callback, callback, *args, \*\*kwargs)
+File "/home/sid/Repositories/anomaly-detection-demo/.venv/lib/python3.10/site-packages/nicegui/run.py", line 65, in \_run
+return await loop.run_in_executor(executor, partial(callback,*args, \*\*kwargs))
+concurrent.futures.process.BrokenProcessPool: A process in the process pool was terminated abruptly while the future was running or pending.
+
+> ```
+>
+> ```
+
 ## Training on AmplitUDE HPC
 
 ### Zip Folder
@@ -148,32 +208,3 @@ uv run --env-file=.env python -u src/demo/anomaly_detection/experiments/cookie/t
 submit job: sbatch jobscript.sh </br>
 queue overview: squeue -l </br>
 cancel job: scancel <job_id> </br>
-
-## CSI camera support on Jetson Nano
-
-> [!TIP]
-> The Raspberry Pi Camera version 3 uses the Sony IMX708 sensor!
-
-1. Install kernel for PiCam v3 from arducam.com
-
-   ```bash
-   cd ~/Downloads
-   wget https://github.com/ArduCAM/MIPI_Camera/releases/download/v0.0.3/install_full.sh
-   chmod +x ./install_full.sh
-   ./install_full.sh -m imx708
-   ```
-
-2. Simple test for camera setup
-
-   ```
-   nvgstcapture-1.0
-   ```
-
-3. Detailed test with gstreamer
-
-   ```
-   sensor_id=0  # adjust according to the used CAM_PORT
-   Framerate=30 # range from 2 to 60 available
-
-   gst-launch-1.0 nvarguscamerasrc sensor_id=$sensor_id ! "video/x-raw(memory:NVMM),width=1920,height=1080,framerate=$Framerate/1,format=NV12" ! nvvidconv flip-method=0 ! "video/x-raw,width=960,height=720" ! nvvidconv ! nvegltransform ! nveglglessink -e
-   ```
