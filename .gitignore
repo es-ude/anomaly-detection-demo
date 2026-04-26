@@ -1,5 +1,8 @@
-dataset/
-recordings/
+src/demo/web_app/recordings/
+src/demo/web_app/snapshots/
+
+# local env variables
+.env
 
 # Python-generated files
 __pycache__/
@@ -20,26 +23,16 @@ wheels/
 .vscode
 .idea
 .vimrc
+.nvim.lua
 
-outputs
-.env
-
+# macOS
 .DS_Store
 
 # Devenv
 devenv.local.nix
 .devenv*
-
-# direnv
 .direnv
-
-# Devenv
 .devenv*
 devenv.local.nix
 devenv.local.yaml
-
-# direnv
-.direnv
-
-# pre-commit
 .pre-commit-config.yaml
