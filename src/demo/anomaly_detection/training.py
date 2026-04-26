@@ -1,8 +1,11 @@
 from collections.abc import Callable
 from functools import partial
+from pathlib import Path
 
 import torch
 from torch.utils.data import DataLoader, Dataset
+
+from demo.anomaly_detection.experiments.training_definitions import save_model
 
 
 def train_autoencoder(
@@ -16,6 +19,7 @@ def train_autoencoder(
     augment_input_image: Callable[[torch.Tensor], torch.Tensor] = lambda x: x,
     num_workers: int = 0,
     device: torch.device = torch.device("cpu"),
+    snapshots: None | tuple[int, Path] = None,
 ) -> dict[str, list[float]]:
     history = dict(epoch=[], train_reconst_mse=[], test_reconst_mse=[])
 
@@ -71,5 +75,10 @@ def train_autoencoder(
             f"train_reconst_mse: {history['train_reconst_mse'][-1]:.04f} ; "
             f"test_reconst_mse: {history['test_reconst_mse'][-1]:.04f}"
         )
+
+        if snapshots is not None:
+            snapshots[1].mkdir(parents=True, exist_ok=True)
+            if epoch % snapshots[0] == 0:
+                save_model(model, snapshots[1].joinpath(f"snapshot_{epoch}.pt"))
 
     return history
