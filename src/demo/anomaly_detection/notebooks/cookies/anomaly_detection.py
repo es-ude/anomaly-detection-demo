@@ -22,7 +22,7 @@ with app.setup:
     from demo.anomaly_detection.persistence import load_model
     from demo.anomaly_detection.preprocessing import InferencePreprocessing
 
-    DATASET_DIR = Path(os.environ["COOKIE_AE_DATASET_DIR"])
+    DATASET_DIR = Path(os.environ["COOKIE_DATASET_DIR"])
     CKPT_DIR = Path(os.environ["COOKIE_CKPT_DIR"])
     MODEL_FILE = CKPT_DIR / "ae_model.pt"
     HISTORY_FILE = CKPT_DIR / "ae_history.csv"
@@ -47,7 +47,8 @@ def _():
             target_img_height=int(os.environ["IMAGE_HEIGHT"]),
         ),
     )
-    ds_ae, ds_clf = create_ds(training_set=True), create_ds(training_set=False)
+    ds_ae = create_ds(training_set=True)
+    ds_clf = create_ds(training_set=False)
 
     model = Autoencoder()
     load_model(model, MODEL_FILE)
@@ -81,15 +82,15 @@ def _(ds_ae, ds_clf, model):
 
 
 @app.cell
-def _(ds_clf):
-    img_idx = mo.ui.number(start=0, stop=len(ds_clf) - 1, label="Image Index")
+def _(ds_ae):
+    img_idx = mo.ui.number(start=0, stop=len(ds_ae) - 1, label="Image Index")
     img_idx
     return (img_idx,)
 
 
 @app.cell
-def _(ds_clf, img_idx, model):
-    img_original, _ = cast(torch.Tensor, ds_clf[img_idx.value])
+def _(ds_ae, img_idx, model):
+    img_original, _ = cast(torch.Tensor, ds_ae[img_idx.value])
     with torch.no_grad():
         img_reconstr = cast(torch.Tensor, model(img_original)[1])
 

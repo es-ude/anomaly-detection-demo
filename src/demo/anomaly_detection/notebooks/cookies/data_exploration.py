@@ -19,7 +19,7 @@ with app.setup:
 def _():
     cookie_dataset = partial(
         CookieAdDataset,
-        dataset_dir=Path(os.environ["COOKIE_AE_DATASET_DIR"]),
+        dataset_dir=Path(os.environ["COOKIE_DATASET_DIR"]),
         in_memory=False,
         sample_transform=InferencePreprocessing(
             target_img_width=int(os.environ["IMAGE_WIDTH"]),

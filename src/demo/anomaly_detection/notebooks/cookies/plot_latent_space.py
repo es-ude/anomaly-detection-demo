@@ -19,7 +19,7 @@ with app.setup:
     from demo.anomaly_detection.persistence import load_model
     from demo.anomaly_detection.preprocessing import InferencePreprocessing
 
-    DATASET_DIR = Path(os.environ["COOKIE_CLF_DATASET_DIR"])
+    DATASET_DIR = Path(os.environ["COOKIE_DATASET_DIR"])
     CKPT_DIR = Path(os.environ["COOKIE_CKPT_DIR"])
     AE_MODEL_FILE = CKPT_DIR / "ae_model.pt"
 
