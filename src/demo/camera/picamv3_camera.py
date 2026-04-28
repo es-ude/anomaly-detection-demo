@@ -1,3 +1,5 @@
+from time import sleep
+
 try:
     from libcamera import controls
     from picamera2 import Picamera2
@@ -22,7 +24,12 @@ class Camera:
         )
         self.camera.configure(self.config)
         self.camera.start()
-        self.camera.set_controls({"AfMode": controls.AfModeEnum.Continuous})
+        self.camera.set_controls(
+            {"AfMode": controls.AfModeEnum.Manual, "LensPosition": 3.28}
+        )
+        sleep(2)
+        if not self.camera.autofocus_cycle():
+            raise RuntimeError("Autofocus cycel failed!")
         self.is_open = True
 
     def is_opened(self) -> bool:

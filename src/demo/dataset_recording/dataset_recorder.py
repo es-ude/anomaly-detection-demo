@@ -1,30 +1,26 @@
 import time
 import uuid
 from pathlib import Path
-from typing import Literal, Protocol
+from typing import Protocol
 
 import typer
 
-from demo.camera.image import Image
+from demo.camera import Camera, Image
 from demo.dataset_recording.utils import IMG_EXT, save_image
 
 
 def main(
     image_dir: Path,
-    camera_backend: Literal["opencv", "picam"] = "opencv",
     camera_port: int = 0,
     delay: int = -1,
     alert: bool = True,
     image_width: int = 1920,
     image_height: int = 1080,
-    lens_position: None | float = None,
 ) -> None:
     camera = _get_camera(
-        camera=camera_backend,
         port=camera_port,
         image_width=image_width,
         image_height=image_height,
-        lens_position=lens_position,
     )
 
     image_dir.mkdir(parents=True, exist_ok=True)
@@ -56,22 +52,14 @@ class _Camera(Protocol):
 
 
 def _get_camera(
-    camera: Literal["opencv", "picam"],
     port: int,
     image_width: int,
     image_height: int,
-    lens_position: None | float,
 ) -> _Camera:
-    match camera:
-        case "opencv":
-            from demo.camera.opencv_camera import Camera
-        case "picam":
-            from demo.camera.picamv3_camera import Camera
     return Camera(
         cam_port=port,
         width=image_width,
         height=image_height,
-        lens_position=lens_position,
     )
 
 

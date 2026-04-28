@@ -2,7 +2,7 @@ from pathlib import Path
 
 import typer
 
-from demo.camera.image import Image
+from demo.camera import Image
 from demo.dataset_recording.utils import IMG_EXT, load_image, save_image
 
 
